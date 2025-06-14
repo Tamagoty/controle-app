@@ -1,0 +1,104 @@
+/* src/components/Table/Table.module.css */
+
+/*
+  Container da tabela.
+  A propriedade 'overflow-x: auto' é crucial para a responsividade.
+  Em ecrãs pequenos, permite que a tabela seja rolada horizontalmente
+  sem quebrar o layout da página.
+*/
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse; /* Remove o espaço entre as bordas das células */
+  text-align: left;
+  white-space: nowrap; /* Evita que o texto quebre, auxiliando a rolagem horizontal */
+}
+
+/* Estilização das linhas, tanto no cabeçalho quanto no corpo */
+.tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Remove a borda da última linha do corpo para um visual mais limpo */
+.table tbody .tr:last-child {
+  border-bottom: none;
+}
+
+/* Cabeçalho da tabela (th) */
+.th {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Células da tabela (td) */
+.td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+
+/* Efeito de hover nas linhas do corpo da tabela */
+.table tbody .tr:hover {
+  background-color: var(--color-bg-tertiary);
+}
+
+/* Estilo para a mensagem de "sem dados" */
+.tdEmpty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+}
+
+/*
+  =================================
+  RESPONSIVIDADE PARA ECRÃS PEQUENOS
+  =================================
+  Para melhorar a experiência em telemóveis, podemos transformar
+  a tabela num formato de lista. O `data-label` no 'td' é para isso.
+  Por agora, focamos na rolagem horizontal que é mais simples e robusta.
+  A abordagem de "blocos" pode ser implementada se necessário.
+
+@media (max-width: 768px) {
+  .table thead {
+    display: none;
+  }
+  .table, .table tbody, .table .tr, .table .td {
+    display: block;
+    width: 100%;
+  }
+  .table .tr {
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-border);
+  }
+  .table .td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+    white-space: normal;
+  }
+  .table .td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: var(--spacing-md);
+    width: calc(50% - var(--spacing-lg));
+    padding-right: var(--spacing-md);
+    text-align: left;
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+}
+*/

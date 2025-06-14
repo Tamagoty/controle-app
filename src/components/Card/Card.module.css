@@ -1,0 +1,23 @@
+/* src/components/Card/Card.module.css */
+
+.card {
+  /* Box Model */
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+
+  /* Aparência */
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  
+  /* Transição para possíveis interações futuras */
+  transition: box-shadow var(--transition-speed), transform var(--transition-speed);
+}
+
+/* Efeito de hover opcional, para quando o card for interativo */
+/*
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+*/

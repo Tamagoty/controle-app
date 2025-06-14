@@ -1,0 +1,120 @@
+/* src/styles/theme.css */
+
+/* Este é o arquivo de tema central para o "Controle App".
+  Ele utiliza variáveis CSS (custom properties) para definir a paleta de cores,
+  espaçamentos, fontes e outras constantes de design.
+  Todos os componentes da aplicação devem utilizar estas variáveis
+  para garantir consistência visual e facilitar a manutenção do tema.
+*/
+
+:root {
+  /* =================================
+    PALETA DE CORES - TEMA ESCURO
+    =================================
+  */
+  
+  /* Cores de Fundo (Background) */
+  --color-bg-primary: #1a1a1a;       /* Fundo principal, mais escuro */
+  --color-bg-secondary: #2a2a2a;     /* Fundo para elementos como cards e modais */
+  --color-bg-tertiary: #3a3a3a;      /* Fundo para elementos com destaque, como inputs focados */
+
+  /* Cores de Texto */
+  --color-text-primary: #e6e6e6;     /* Texto principal, mais claro */
+  --color-text-secondary: #a0a0a0;   /* Texto secundário, para descrições e placeholders */
+  --color-text-inverted: #1a1a1a;      /* Texto para usar sobre fundos claros */
+
+  /* Cores de Ação (Cores principais da marca) */
+  --color-primary: #6a11cb;          /* Cor primária para botões principais, links e destaques */
+  --color-primary-hover: #8338ec;    /* Cor primária para o estado :hover */
+  --color-secondary: #2575fc;        /* Cor secundária para outras ações */
+  --color-secondary-hover: #6a9cfd;  /* Cor secundária para o estado :hover */
+
+  /* Cores de Feedback Semântico */
+  --color-success: #28a745;          /* Verde para sucesso, confirmações */
+  --color-warning: #ffc107;          /* Amarelo para alertas e avisos */
+  --color-danger: #dc3545;           /* Vermelho para erros, exclusões, ações perigosas */
+  --color-info: #17a2b8;             /* Azul para informações e destaques neutros */
+  
+  /* Cores de Bordas e Divisórias */
+  --color-border: #444444;
+
+  /* =================================
+    TIPOGRAFIA
+    =================================
+  */
+  --font-family-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-md: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.5rem;   /* 24px */
+  --font-size-xxl: 2rem;    /* 32px */
+
+  /* =================================
+    ESPAÇAMENTO E TAMANHOS
+    =================================
+  */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /* =================================
+    BORDAS
+    =================================
+  */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px;
+
+  /* =================================
+    TRANSIÇÕES E SOMBRAS
+    =================================
+  */
+  --transition-speed: 0.2s ease-in-out;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+}
+
+/*
+  =================================
+  ESTILOS GLOBAIS E RESET
+  =================================
+  Aqui aplicamos um reset básico e definimos os estilos padrão
+  para a aplicação, garantindo que ela use as variáveis do tema.
+*/
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+  =================================
+  PONTO DE PARTIDA PARA RESPONSIVIDADE
+  =================================
+  A responsividade será tratada principalmente dentro de cada
+  componente usando media queries, mas podemos ter breakpoints globais.
+*/
+
+/* Exemplo de breakpoint para tablets e dispositivos menores */
+/* @media (max-width: 768px) {
+  :root {
+    --font-size-md: 0.9rem;
+  }
+} */

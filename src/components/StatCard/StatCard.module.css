@@ -1,0 +1,25 @@
+/* src/components/StatCard/StatCard.module.css */
+
+.statCard {
+  /* Efeito de destaque ao passar o rato */
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.title {
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.value {
+  font-size: var(--font-size-xxl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}

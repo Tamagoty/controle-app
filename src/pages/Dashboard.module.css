@@ -1,0 +1,8 @@
+/* src/pages/Dashboard.module.css */
+
+.statsGrid {
+  display: grid;
+  /* Cria colunas responsivas: elas tentam ter 250px, mas podem crescer para preencher o espaço */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+}

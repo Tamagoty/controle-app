@@ -5,10 +5,7 @@ import { NavLink } from 'react-router-dom';
 import styles from './Sidebar.module.css';
 
 const Sidebar = ({ isOpen, onLinkClick }) => {
-  const sidebarClasses = `
-    ${styles.sidebar}
-    ${isOpen ? styles.open : ''}
-  `;
+  const sidebarClasses = `${styles.sidebar} ${isOpen ? styles.open : ''}`;
 
   const handleLinkClick = () => {
     if (window.innerWidth <= 768) {
@@ -32,9 +29,12 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
           <li className={styles.navItem}>
             <NavLink to="/compras" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Compras</NavLink>
           </li>
-          {/* Link para a nova página de produtos */}
           <li className={styles.navItem}>
             <NavLink to="/produtos" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Produtos</NavLink>
+          </li>
+          {/* NOVO LINK */}
+          <li className={styles.navItem}>
+            <NavLink to="/pessoas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Pessoas</NavLink>
           </li>
         </ul>
       </nav>

@@ -1,6 +1,6 @@
 // src/components/ProductForm/ProductForm.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import styles from './ProductForm.module.css';
@@ -9,40 +9,68 @@ import Button from '../Button/Button';
 /**
  * Formulário para criar ou editar um produto.
  * @param {object} props
- * @param {() => void} props.onSuccess - Função chamada após a criação bem-sucedida.
+ * @param {object} [props.productToEdit] - Os dados do produto a ser editado.
+ * @param {() => void} props.onSuccess - Função chamada após uma ação bem-sucedida.
  */
-const ProductForm = ({ onSuccess }) => {
-  const [name, setName] = useState('');
-  const [salePrice, setSalePrice] = useState('');
-  const [description, setDescription] = useState('');
+const ProductForm = ({ productToEdit, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    sale_price: '',
+    description: '',
+  });
   const [loading, setLoading] = useState(false);
   const notify = useNotify();
+
+  const isEditing = !!productToEdit;
+
+  useEffect(() => {
+    if (isEditing) {
+      setFormData({
+        name: productToEdit.name || '',
+        sale_price: productToEdit.sale_price || '',
+        description: productToEdit.description || '',
+      });
+    }
+  }, [productToEdit, isEditing]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+    const payload = {
+      name: formData.name,
+      sale_price: parseFloat(formData.sale_price),
+      description: formData.description,
+    };
+
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .insert([{ 
-            name: name, 
-            sale_price: parseFloat(salePrice), 
-            description: description 
-        }])
-        .select();
+      let error;
 
-      if (error) {
-        throw error;
+      if (isEditing) {
+        // Modo de Edição
+        ({ error } = await supabase
+          .from('products')
+          .update(payload)
+          .eq('id', productToEdit.id));
+      } else {
+        // Modo de Criação
+        ({ error } = await supabase
+          .from('products')
+          .insert([payload]));
       }
+      
+      if (error) throw error;
 
-      notify.success('Produto criado com sucesso!');
-      if (onSuccess) {
-        onSuccess(data[0]); // Passa o novo produto para a função de callback
-      }
+      notify.success(`Produto ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
+      if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Erro ao criar produto:', error);
-      notify.error(error.message || 'Falha ao criar o produto.');
+      console.error('Erro ao guardar produto:', error);
+      notify.error(error.message || `Falha ao ${isEditing ? 'atualizar' : 'criar'} o produto.`);
     } finally {
       setLoading(false);
     }
@@ -52,35 +80,15 @@ const ProductForm = ({ onSuccess }) => {
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.formGroup}>
         <label htmlFor="name">Nome do Produto</label>
-        <input
-          id="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className={styles.input}
-        />
+        <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required className={styles.input}/>
       </div>
       <div className={styles.formGroup}>
         <label htmlFor="sale_price">Preço de Venda</label>
-        <input
-          id="sale_price"
-          type="number"
-          step="0.01"
-          value={salePrice}
-          onChange={(e) => setSalePrice(e.target.value)}
-          required
-          className={styles.input}
-        />
+        <input id="sale_price" name="sale_price" type="number" step="0.01" value={formData.sale_price} onChange={handleChange} required className={styles.input}/>
       </div>
       <div className={styles.formGroup}>
         <label htmlFor="description">Descrição</label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className={styles.textarea}
-        />
+        <textarea id="description" name="description" value={formData.description} onChange={handleChange} className={styles.textarea}/>
       </div>
       <div className={styles.formActions}>
         <Button type="submit" disabled={loading}>

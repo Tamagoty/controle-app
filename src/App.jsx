@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Vendas from './pages/Vendas';
 import Compras from './pages/Compras';
 import Produtos from './pages/Produtos'; // Importamos a nova página
+import Pessoas from './pages/Pessoas'; // Importamos a nova página
 
 function App() {
   return (
@@ -41,8 +42,8 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="vendas" element={<Vendas />} />
           <Route path="compras" element={<Compras />} />
-          {/* Adicionamos a rota para a página de produtos */}
           <Route path="produtos" element={<Produtos />} />
+          <Route path="pessoas" element={<Pessoas />} /> {/* <-- NOVA ROTA */}
         </Route>
       </Routes>
     </>

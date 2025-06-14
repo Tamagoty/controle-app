@@ -1,94 +1,134 @@
 // src/pages/Compras.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { FaPlus, FaMoneyBillWave } from 'react-icons/fa';
 import Card from '../components/Card/Card';
 import Table from '../components/Table/Table';
 import Button from '../components/Button/Button';
 import Modal from '../components/Modal/Modal';
-import PurchaseForm from '../components/PurchaseForm/PurchaseForm'; // Importamos o novo formulário
+import PurchaseForm from '../components/PurchaseForm/PurchaseForm';
+import PurchasePaymentForm from '../components/PurchasePaymentForm/PurchasePaymentForm';
+import ProgressBar from '../components/ProgressBar/ProgressBar';
 import { useNotify } from '../hooks/useNotify';
 
 const Compras = () => {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: 'purchase_date', direction: 'descending' });
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedPurchase, setSelectedPurchase] = useState(null);
   const notify = useNotify();
 
   const fetchPurchases = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('purchases')
-        .select(`
-          id,
-          purchase_date,
-          total_amount,
-          supplier:entities ( name ),
-          cost_center:cost_centers ( name )
-        `)
-        .order('purchase_date', { ascending: false });
-
+      const { data, error } = await supabase.rpc('get_purchases_with_payment_status');
       if (error) throw error;
-
-      const formattedData = data.map(p => ({
-        ...p,
-        supplier_name: p.supplier.name,
-        cost_center_name: p.cost_center.name,
-        purchase_date: new Date(p.purchase_date).toLocaleDateString(),
-      }));
-      
-      setPurchases(formattedData);
-
+      setPurchases(data || []);
     } catch (error) {
       console.error('Erro ao buscar compras:', error);
-      notify.error('Não foi possível carregar as compras.');
+      notify.error(error.message || 'Não foi possível carregar as compras.');
     } finally {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     fetchPurchases();
   }, []);
 
-  const handleNewPurchaseSuccess = () => {
-    fetchPurchases(); // Recarrega a lista de compras
-    setIsModalOpen(false); // Fecha o modal
+  const sortedPurchases = useMemo(() => {
+    let sortableItems = [...purchases];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [purchases, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
   };
-  
+
+  const handleSuccess = () => {
+    // Para evitar uma nova busca na API, poderíamos atualizar o estado localmente.
+    // Mas por simplicidade e para garantir consistência, vamos buscar os dados novamente.
+    fetchPurchases();
+    setIsPurchaseModalOpen(false);
+    setIsPaymentModalOpen(false);
+  };
+
+  const openPaymentModal = (purchase) => {
+    setSelectedPurchase(purchase);
+    setIsPaymentModalOpen(true);
+  };
+
   const columns = [
-    { header: 'Data', accessor: 'purchase_date' },
-    { header: 'Fornecedor', accessor: 'supplier_name' },
-    { header: 'Centro de Custo', accessor: 'cost_center_name' },
-    { header: 'Valor Total', accessor: 'total_amount' },
+    { 
+      header: 'Fornecedor / C. Custo', 
+      key: 'supplier_name', 
+      sortable: true,
+      // CORREÇÃO: Usamos o renderizador 'Cell' para exibir múltiplos dados.
+      // A propriedade 'key' ainda é usada para a lógica de ordenação.
+      Cell: ({ row }) => (
+        <div>
+          <strong>{row.supplier_name}</strong>
+          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+            {row.cost_center_name || 'Não informado'}
+          </div>
+        </div>
+      )
+    },
+    { header: 'Data', key: 'purchase_date', sortable: true, Cell: ({ row }) => new Date(row.purchase_date).toLocaleDateString() },
+    { header: 'Status Pagamento', key: 'balance', sortable: true, Cell: ({ row }) => <ProgressBar total={row.total_amount} paid={row.total_paid} /> },
+    { header: 'Ações', key: 'actions', sortable: false, Cell: ({ row }) => (
+        <Button icon={FaMoneyBillWave} onClick={() => openPaymentModal(row)} isIconOnly>Ver Pagamentos</Button>
+      )
+    },
   ];
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
         <h1>Compras</h1>
-        <Button onClick={() => setIsModalOpen(true)}>
-          Nova Compra
-        </Button>
+        <Button icon={FaPlus} onClick={() => setIsPurchaseModalOpen(true)}>Nova Compra</Button>
       </div>
       
       <Card>
         {loading ? (
           <p>A carregar compras...</p>
         ) : (
-          <Table columns={columns} data={purchases} />
+          <Table 
+            columns={columns} 
+            data={sortedPurchases} 
+            onSort={requestSort}
+            sortConfig={sortConfig}
+          />
         )}
       </Card>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Registar Nova Compra"
-      >
-        {/* Usamos o nosso novo formulário aqui */}
-        <PurchaseForm onSuccess={handleNewPurchaseSuccess} />
+      <Modal isOpen={isPurchaseModalOpen} onClose={() => setIsPurchaseModalOpen(false)} title="Registar Nova Compra">
+        <PurchaseForm onSuccess={handleSuccess} />
       </Modal>
+
+      {selectedPurchase && (
+        <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} title="Detalhes do Pagamento da Compra">
+          <PurchasePaymentForm purchase={selectedPurchase} onSuccess={handleSuccess} />
+        </Modal>
+      )}
     </div>
   );
 };

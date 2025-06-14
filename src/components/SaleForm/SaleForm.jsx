@@ -10,6 +10,7 @@ const SaleForm = ({ onSuccess }) => {
   const [clientId, setClientId] = useState('');
   const [sellerId, setSellerId] = useState('');
   const [costCenterId, setCostCenterId] = useState('');
+  const [commissionPercentage, setCommissionPercentage] = useState(0); // <-- NOVO ESTADO
   const [items, setItems] = useState([{ product_id: '', quantity: 1, unit_price: '' }]);
   const [clients, setClients] = useState([]);
   const [sellers, setSellers] = useState([]);
@@ -20,21 +21,12 @@ const SaleForm = ({ onSuccess }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: clientsData } = await supabase
-        .from('entity_roles')
-        .select(`entity:entities!inner(id, name)`) // !inner para garantir que a entidade existe
-        .eq('role', 'Cliente');
+      const { data: clientsData } = await supabase.from('entity_roles').select(`entity:entities!inner(id, name)`).eq('role', 'Cliente');
       if (clientsData) setClients(clientsData.map(c => c.entity));
-
-      const { data: sellersData } = await supabase
-        .from('entity_roles')
-        .select(`entity:entities!inner(id, name)`)
-        .eq('role', 'Funcionário');
+      const { data: sellersData } = await supabase.from('entity_roles').select(`entity:entities!inner(id, name)`).eq('role', 'Funcionário');
       if (sellersData) setSellers(sellersData.map(s => s.entity));
-
       const { data: costCentersData } = await supabase.from('cost_centers').select('id, name');
       if (costCentersData) setCostCenters(costCentersData);
-      
       const { data: productsData } = await supabase.from('products').select('id, name, sale_price');
       if (productsData) setProducts(productsData);
     };
@@ -49,51 +41,35 @@ const SaleForm = ({ onSuccess }) => {
     const newItems = [...items];
     const currentItem = newItems[index];
     currentItem[field] = value;
-
     if (field === 'product_id') {
       const selectedProduct = products.find(p => p.id === value);
-      if (selectedProduct) {
-        currentItem.unit_price = selectedProduct.sale_price;
-      }
+      if (selectedProduct) currentItem.unit_price = selectedProduct.sale_price;
     }
     setItems(newItems);
   };
 
-  const addItem = () => {
-    setItems([...items, { product_id: '', quantity: 1, unit_price: '' }]);
-  };
-
-  const removeItem = (index) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
+  const addItem = () => setItems([...items, { product_id: '', quantity: 1, unit_price: '' }]);
+  const removeItem = (index) => setItems(items.filter((_, i) => i !== index));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     const itemsPayload = items.map(item => ({
       product_id: item.product_id,
       quantity: parseInt(item.quantity, 10),
       unit_price: parseFloat(item.unit_price)
     }));
-
     try {
-      // Chama a função RPC que criamos no Supabase
-      const { data, error } = await supabase.rpc('create_sale_with_items', {
+      const { error } = await supabase.rpc('create_sale_with_items', {
         client_id_param: clientId,
-        seller_id_param: sellerId || null, // Envia null se nenhum vendedor for selecionado
+        seller_id_param: sellerId || null,
         cost_center_id_param: costCenterId,
+        commission_percentage_param: parseFloat(commissionPercentage) || 0, // <-- NOVO DADO
         items_param: itemsPayload
       });
-
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       notify.success('Venda registada com sucesso!');
-      if (onSuccess) {
-        onSuccess();
-      }
+      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Erro ao registar venda:', error);
       notify.error(error.message || 'Falha ao registar a venda.');
@@ -105,6 +81,7 @@ const SaleForm = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.headerFields}>
+        {/* ... (campos de cliente e vendedor iguais) ... */}
         <div className={styles.formGroup}>
           <label htmlFor="client">Cliente</label>
           <select id="client" value={clientId} onChange={(e) => setClientId(e.target.value)} required className={styles.select}>
@@ -126,6 +103,11 @@ const SaleForm = ({ onSuccess }) => {
             {costCenters.map(cc => <option key={cc.id} value={cc.id}>{cc.name}</option>)}
           </select>
         </div>
+        {/* NOVO CAMPO PARA A COMISSÃO */}
+        <div className={styles.formGroup}>
+          <label htmlFor="commission">Comissão (%)</label>
+          <input id="commission" type="number" step="0.01" min="0" max="100" value={commissionPercentage} onChange={(e) => setCommissionPercentage(e.target.value)} className={styles.input}/>
+        </div>
       </div>
       
       <h3 className={styles.itemsTitle}>Itens da Venda</h3>
@@ -145,9 +127,7 @@ const SaleForm = ({ onSuccess }) => {
       <Button type="button" variant="ghost" onClick={addItem}>Adicionar Item</Button>
       
       <div className={styles.footer}>
-        <div className={styles.total}>
-          Total: <span>R$ {totalAmount.toFixed(2)}</span>
-        </div>
+        <div className={styles.total}>Total: <span>R$ {totalAmount.toFixed(2)}</span></div>
         <Button type="submit" disabled={loading || !clientId || !costCenterId || items.some(i => !i.product_id)}>
           {loading ? 'A Guardar...' : 'Guardar Venda'}
         </Button>

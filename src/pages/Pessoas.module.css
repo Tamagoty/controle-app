@@ -1,0 +1,65 @@
+/* src/pages/Pessoas.module.css */
+
+.statusCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: 500;
+}
+
+.statusActive,
+.statusInactive {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.statusActive {
+  background-color: var(--color-success);
+}
+
+.statusInactive {
+  background-color: var(--color-danger);
+}
+
+/* Novos estilos para a célula do nome da entidade */
+.entityNameCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.entityIcon {
+  font-size: 1.8rem;
+  color: var(--color-text-secondary);
+  flex-shrink: 0; /* Previne que o ícone encolha */
+}
+
+.entityInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.entityType,
+.subtext {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Novos estilos para a célula de papéis */
+.rolesCell {
+  display: flex;
+  flex-wrap: wrap; /* Permite que os 'tags' quebrem para a linha seguinte */
+  gap: var(--spacing-xs);
+  max-width: 250px; /* Limita a largura máxima da célula */
+}
+
+.roleTag {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap; /* Garante que o texto dentro do tag não quebre */
+}

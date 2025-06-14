@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { FaPlus, FaEdit } from 'react-icons/fa';
 import Table from '../components/Table/Table';
 import Card from '../components/Card/Card';
 import Button from '../components/Button/Button';
@@ -13,9 +14,9 @@ const Produtos = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const notify = useNotify();
 
-  // A função para buscar os dados. Não precisa de 'useCallback' neste cenário.
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -23,7 +24,6 @@ const Produtos = () => {
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       setProducts(data);
     } catch (error) {
@@ -36,27 +36,44 @@ const Produtos = () => {
 
   useEffect(() => {
     fetchProducts();
-    // A CORREÇÃO: Usar um array de dependências vazio '[]'.
-    // Isto garante que o efeito só roda UMA VEZ quando a página carrega,
-    // quebrando o loop infinito de requisições.
   }, []);
 
-  const handleNewProductSuccess = (newProduct) => {
-    setProducts(currentProducts => [newProduct, ...currentProducts]);
+  const handleOpenModal = (product = null) => {
+    setEditingProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingProduct(null);
+  };
+
+  const handleSuccess = () => {
+    fetchProducts();
+    handleCloseModal();
   };
 
   const columns = [
-    { header: 'Nome', accessor: 'name' },
-    { header: 'Preço de Venda', accessor: 'sale_price' },
-    { header: 'Descrição', accessor: 'description' },
+    { header: 'Nome', key: 'name', accessor: 'name', sortable: true },
+    { header: 'Preço de Venda', key: 'sale_price', accessor: 'sale_price', sortable: true },
+    { header: 'Descrição', key: 'description', accessor: 'description', sortable: false },
+    {
+      header: 'Ações',
+      key: 'actions',
+      sortable: false,
+      Cell: ({ row }) => (
+        <Button icon={FaEdit} isIconOnly onClick={() => handleOpenModal(row)}>
+          Editar
+        </Button>
+      )
+    }
   ];
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
         <h1>Produtos</h1>
-        <Button onClick={() => setIsModalOpen(true)}>
+        <Button icon={FaPlus} onClick={() => handleOpenModal()}>
           Novo Produto
         </Button>
       </div>
@@ -71,10 +88,10 @@ const Produtos = () => {
 
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Adicionar Novo Produto"
+        onClose={handleCloseModal} 
+        title={editingProduct ? 'Editar Produto' : 'Adicionar Novo Produto'}
       >
-        <ProductForm onSuccess={handleNewProductSuccess} />
+        <ProductForm onSuccess={handleSuccess} productToEdit={editingProduct} />
       </Modal>
     </div>
   );

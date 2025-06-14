@@ -25,7 +25,7 @@ const Vendas = () => {
       setLoading(true);
       const { data, error } = await supabase.rpc('get_sales_with_payment_status');
       if (error) throw error;
-      setSales(data);
+      setSales(data || []);
     } catch (error) {
       console.error('Erro ao buscar vendas:', error);
       notify.error(error.message || 'Não foi possível carregar as vendas.');
@@ -34,16 +34,12 @@ const Vendas = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSales();
-  }, []);
-
+  useEffect(() => { fetchSales(); }, []);
   const handleSuccess = () => {
     fetchSales();
     setIsSaleModalOpen(false);
     setIsPaymentModalOpen(false);
   };
-
   const openPaymentModal = (sale) => {
     setSelectedSale(sale);
     setIsPaymentModalOpen(true);
@@ -57,11 +53,12 @@ const Vendas = () => {
           <strong>{row.client_name}</strong>
           <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
             {row.seller_name || 'Sem Vendedor'}
+            {/* Exibe a comissão se ela for maior que zero */}
+            {row.commission_percentage > 0 && ` (${row.commission_percentage}%)`}
           </div>
         </div>
       ),
     },
-    // NOVA COLUNA PARA DATA E CENTRO DE CUSTO
     {
       header: 'Data / C. Custo',
       Cell: ({ row }) => (
@@ -99,19 +96,12 @@ const Vendas = () => {
           Nova Venda
         </Button>
       </div>
-      
       <Card>
-        {loading ? (
-          <p>A carregar vendas...</p>
-        ) : (
-          <Table columns={columns} data={sales} />
-        )}
+        {loading ? <p>A carregar vendas...</p> : <Table columns={columns} data={sales} />}
       </Card>
-
       <Modal isOpen={isSaleModalOpen} onClose={() => setIsSaleModalOpen(false)} title="Registar Nova Venda">
         <SaleForm onSuccess={handleSuccess} />
       </Modal>
-
       {selectedSale && (
         <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} title="Detalhes do Pagamento">
           <SalePaymentForm sale={selectedSale} onSuccess={handleSuccess} />

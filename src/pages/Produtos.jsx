@@ -8,7 +8,9 @@ import Card from '../components/Card/Card';
 import Button from '../components/Button/Button';
 import Modal from '../components/Modal/Modal';
 import ProductForm from '../components/ProductForm/ProductForm';
+import ToggleSwitch from '../components/ToggleSwitch/ToggleSwitch';
 import { useNotify } from '../hooks/useNotify';
+import styles from './Produtos.module.css';
 
 const Produtos = () => {
   const [products, setProducts] = useState([]);
@@ -20,12 +22,9 @@ const Produtos = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_products_with_details');
       if (error) throw error;
-      setProducts(data);
+      setProducts(data || []);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
       notify.error('Não foi possível carregar os produtos.');
@@ -37,6 +36,16 @@ const Produtos = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const handleStatusChange = async (productId, newStatus) => {
+    try {
+      await supabase.from('products').update({ is_active: newStatus }).eq('id', productId);
+      setProducts(current => current.map(p => p.id === productId ? { ...p, is_active: newStatus } : p));
+      notify.success('Status atualizado!');
+    } catch (error) {
+      notify.error('Falha ao atualizar o status.');
+    }
+  };
 
   const handleOpenModal = (product = null) => {
     setEditingProduct(product);
@@ -52,20 +61,58 @@ const Produtos = () => {
     fetchProducts();
     handleCloseModal();
   };
+  
+  const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
   const columns = [
-    { header: 'Nome', key: 'name', accessor: 'name', sortable: true },
-    { header: 'Preço de Venda', key: 'sale_price', accessor: 'sale_price', sortable: true },
-    { header: 'Descrição', key: 'description', accessor: 'description', sortable: false },
+    {
+      header: 'Produto',
+      key: 'name',
+      sortable: true,
+      Cell: ({ row }) => (
+        <div>
+          <strong>{row.name}</strong>
+          <div className={styles.subtext}>{row.category_name || 'Sem categoria'}</div>
+        </div>
+      )
+    },
+    {
+      header: 'Descrição',
+      key: 'description',
+      Cell: ({ row }) => <p className={styles.descriptionCell}>{row.description}</p>
+    },
+    {
+      header: 'Preços (C/V)',
+      key: 'sale_price',
+      sortable: true,
+      Cell: ({ row }) => (
+        <div>
+          <strong>{formatCurrency(row.sale_price)}</strong>
+          <div className={styles.subtext}>Custo: {formatCurrency(row.purchase_price)}</div>
+        </div>
+      )
+    },
+    {
+      header: 'Tipo / Un.',
+      key: 'product_type',
+      sortable: true,
+      Cell: ({ row }) => (
+        <div>
+          <strong>{row.product_type}</strong>
+          <div className={styles.subtext}>{row.unit_of_measure}</div>
+        </div>
+      )
+    },
+    {
+      header: 'Status',
+      key: 'is_active',
+      sortable: true,
+      Cell: ({ row }) => <ToggleSwitch checked={row.is_active} onChange={(status) => handleStatusChange(row.id, status)} />
+    },
     {
       header: 'Ações',
       key: 'actions',
-      sortable: false,
-      Cell: ({ row }) => (
-        <Button icon={FaEdit} isIconOnly onClick={() => handleOpenModal(row)}>
-          Editar
-        </Button>
-      )
+      Cell: ({ row }) => <Button icon={FaEdit} isIconOnly onClick={() => handleOpenModal(row)}>Editar</Button>
     }
   ];
 
@@ -79,11 +126,7 @@ const Produtos = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <p>A carregar produtos...</p>
-        ) : (
-          <Table columns={columns} data={products} />
-        )}
+        {loading ? <p>A carregar produtos...</p> : <Table columns={columns} data={products} />}
       </Card>
 
       <Modal 

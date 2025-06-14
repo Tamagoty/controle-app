@@ -1,0 +1,13 @@
+/* src/pages/Produtos.module.css */
+
+.subtext {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.descriptionCell {
+  white-space: normal; /* Permite a quebra de linha */
+  max-width: 300px; /* Limita a largura para forçar a quebra */
+  line-height: 1.4;
+  font-size: var(--font-size-sm);
+}

@@ -6,29 +6,38 @@ import { useNotify } from '../../hooks/useNotify';
 import styles from './ProductForm.module.css';
 import Button from '../Button/Button';
 
-/**
- * Formulário para criar ou editar um produto.
- * @param {object} props
- * @param {object} [props.productToEdit] - Os dados do produto a ser editado.
- * @param {() => void} props.onSuccess - Função chamada após uma ação bem-sucedida.
- */
 const ProductForm = ({ productToEdit, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
-    sale_price: '',
     description: '',
+    sale_price: '',
+    purchase_price: '',
+    product_type: 'Ambos',
+    unit_of_measure: 'un',
+    category_id: '',
   });
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const notify = useNotify();
-
   const isEditing = !!productToEdit;
 
   useEffect(() => {
+    // Busca as categorias de produtos para popular o dropdown
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('product_categories').select('id, name');
+      if (data) setCategories(data);
+    };
+    fetchCategories();
+
     if (isEditing) {
       setFormData({
         name: productToEdit.name || '',
-        sale_price: productToEdit.sale_price || '',
         description: productToEdit.description || '',
+        sale_price: productToEdit.sale_price || '',
+        purchase_price: productToEdit.purchase_price || '',
+        product_type: productToEdit.product_type || 'Ambos',
+        unit_of_measure: productToEdit.unit_of_measure || 'un',
+        category_id: productToEdit.category_id || '',
       });
     }
   }, [productToEdit, isEditing]);
@@ -44,32 +53,25 @@ const ProductForm = ({ productToEdit, onSuccess }) => {
 
     const payload = {
       name: formData.name,
-      sale_price: parseFloat(formData.sale_price),
       description: formData.description,
+      sale_price: parseFloat(formData.sale_price),
+      purchase_price: parseFloat(formData.purchase_price),
+      product_type: formData.product_type,
+      unit_of_measure: formData.unit_of_measure,
+      category_id: formData.category_id ? parseInt(formData.category_id, 10) : null,
     };
 
     try {
       let error;
-
       if (isEditing) {
-        // Modo de Edição
-        ({ error } = await supabase
-          .from('products')
-          .update(payload)
-          .eq('id', productToEdit.id));
+        ({ error } = await supabase.from('products').update(payload).eq('id', productToEdit.id));
       } else {
-        // Modo de Criação
-        ({ error } = await supabase
-          .from('products')
-          .insert([payload]));
+        ({ error } = await supabase.from('products').insert([payload]));
       }
-      
       if (error) throw error;
-
       notify.success(`Produto ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Erro ao guardar produto:', error);
       notify.error(error.message || `Falha ao ${isEditing ? 'atualizar' : 'criar'} o produto.`);
     } finally {
       setLoading(false);
@@ -80,16 +82,47 @@ const ProductForm = ({ productToEdit, onSuccess }) => {
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.formGroup}>
         <label htmlFor="name">Nome do Produto</label>
-        <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required className={styles.input}/>
+        <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
       </div>
-      <div className={styles.formGroup}>
-        <label htmlFor="sale_price">Preço de Venda</label>
-        <input id="sale_price" name="sale_price" type="number" step="0.01" value={formData.sale_price} onChange={handleChange} required className={styles.input}/>
+
+      <div className={styles.grid}>
+        <div className={styles.formGroup}>
+          <label htmlFor="purchase_price">Preço de Compra (R$)</label>
+          <input id="purchase_price" name="purchase_price" type="number" step="0.01" value={formData.purchase_price} onChange={handleChange} />
+        </div>
+        <div className={styles.formGroup}>
+          <label htmlFor="sale_price">Preço de Venda (R$)</label>
+          <input id="sale_price" name="sale_price" type="number" step="0.01" value={formData.sale_price} onChange={handleChange} required />
+        </div>
       </div>
+
+      <div className={styles.grid}>
+        <div className={styles.formGroup}>
+          <label htmlFor="category_id">Categoria</label>
+          <select id="category_id" name="category_id" value={formData.category_id} onChange={handleChange}>
+            <option value="">Sem categoria</option>
+            {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label htmlFor="product_type">Tipo</label>
+          <select id="product_type" name="product_type" value={formData.product_type} onChange={handleChange}>
+            <option value="Ambos">Ambos (Venda e Uso)</option>
+            <option value="Venda">Apenas Venda</option>
+            <option value="Compra">Apenas Uso/Compra</option>
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label htmlFor="unit_of_measure">Unidade de Medida</label>
+          <input id="unit_of_measure" name="unit_of_measure" type="text" value={formData.unit_of_measure} onChange={handleChange} />
+        </div>
+      </div>
+      
       <div className={styles.formGroup}>
         <label htmlFor="description">Descrição</label>
-        <textarea id="description" name="description" value={formData.description} onChange={handleChange} className={styles.textarea}/>
+        <textarea id="description" name="description" value={formData.description} onChange={handleChange} />
       </div>
+
       <div className={styles.formActions}>
         <Button type="submit" disabled={loading}>
           {loading ? 'A Guardar...' : 'Guardar Produto'}

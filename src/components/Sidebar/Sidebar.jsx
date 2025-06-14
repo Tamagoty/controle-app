@@ -6,12 +6,7 @@ import styles from './Sidebar.module.css';
 
 const Sidebar = ({ isOpen, onLinkClick }) => {
   const sidebarClasses = `${styles.sidebar} ${isOpen ? styles.open : ''}`;
-
-  const handleLinkClick = () => {
-    if (window.innerWidth <= 768) {
-      onLinkClick();
-    }
-  };
+  const handleLinkClick = () => { if (window.innerWidth <= 768) onLinkClick(); };
 
   return (
     <aside className={sidebarClasses}>
@@ -20,22 +15,12 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
       </div>
       <nav className={styles.nav}>
         <ul className={styles.navList}>
-          <li className={styles.navItem}>
-            <NavLink to="/" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Dashboard</NavLink>
-          </li>
-          <li className={styles.navItem}>
-            <NavLink to="/vendas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Vendas</NavLink>
-          </li>
-          <li className={styles.navItem}>
-            <NavLink to="/compras" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Compras</NavLink>
-          </li>
-          <li className={styles.navItem}>
-            <NavLink to="/produtos" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Produtos</NavLink>
-          </li>
-          {/* NOVO LINK */}
-          <li className={styles.navItem}>
-            <NavLink to="/pessoas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Pessoas</NavLink>
-          </li>
+          <li className={styles.navItem}><NavLink to="/" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Dashboard</NavLink></li>
+          <li className={styles.navItem}><NavLink to="/vendas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Vendas</NavLink></li>
+          <li className={styles.navItem}><NavLink to="/compras" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Compras</NavLink></li>
+          <li className={styles.navItem}><NavLink to="/produtos" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Produtos</NavLink></li>
+          <li className={styles.navItem}><NavLink to="/pessoas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Pessoas</NavLink></li>
+          <li className={styles.navItem}><NavLink to="/financeiro/despesas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Despesas</NavLink></li>
         </ul>
       </nav>
     </aside>

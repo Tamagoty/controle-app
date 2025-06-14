@@ -1,62 +1,66 @@
 // src/pages/Produtos.jsx
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient'; // A nossa ponte com o Supabase
+import { supabase } from '../lib/supabaseClient';
 import Table from '../components/Table/Table';
 import Card from '../components/Card/Card';
+import Button from '../components/Button/Button';
+import Modal from '../components/Modal/Modal';
+import ProductForm from '../components/ProductForm/ProductForm';
 import { useNotify } from '../hooks/useNotify';
 
 const Produtos = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const notify = useNotify();
 
+  // A função para buscar os dados. Não precisa de 'useCallback' neste cenário.
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      notify.error('Não foi possível carregar os produtos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Função assíncrona para buscar os produtos.
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        // Usamos o nosso cliente supabase para fazer uma query
-        // à tabela 'products' e selecionar todas as colunas (*).
-        const { data, error } = await supabase
-          .from('products') // O nome da sua tabela de produtos no Supabase
-          .select('*');
-
-        if (error) {
-          // Se houver um erro na chamada, lançamos o erro
-          throw error;
-        }
-
-        // Se a chamada for bem-sucedida, atualizamos o estado com os dados
-        setProducts(data);
-      } catch (error) {
-        // Se algo der errado, mostramos uma notificação de erro
-        console.error('Erro ao buscar produtos:', error);
-        notify.error('Não foi possível carregar os produtos.');
-      } finally {
-        // Independentemente do resultado, paramos o carregamento
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
+    // A CORREÇÃO: Usar um array de dependências vazio '[]'.
+    // Isto garante que o efeito só roda UMA VEZ quando a página carrega,
+    // quebrando o loop infinito de requisições.
+  }, []);
 
-  // A CORREÇÃO ESTÁ AQUI:
-  // Deixamos o array de dependências vazio.
-  // Isto garante que o efeito só roda UMA VEZ, quando o componente é montado.
-  }, []); 
+  const handleNewProductSuccess = (newProduct) => {
+    setProducts(currentProducts => [newProduct, ...currentProducts]);
+    setIsModalOpen(false);
+  };
 
-  // Definição das colunas para a nossa Tabela
   const columns = [
-    { header: 'ID', accessor: 'id' },
     { header: 'Nome', accessor: 'name' },
     { header: 'Preço de Venda', accessor: 'sale_price' },
-    // Adicione outras colunas que existam na sua tabela 'products'
+    { header: 'Descrição', accessor: 'description' },
   ];
 
   return (
     <div>
-      <h1>Produtos</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+        <h1>Produtos</h1>
+        <Button onClick={() => setIsModalOpen(true)}>
+          Novo Produto
+        </Button>
+      </div>
+
       <Card>
         {loading ? (
           <p>A carregar produtos...</p>
@@ -64,6 +68,14 @@ const Produtos = () => {
           <Table columns={columns} data={products} />
         )}
       </Card>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title="Adicionar Novo Produto"
+      >
+        <ProductForm onSuccess={handleNewProductSuccess} />
+      </Modal>
     </div>
   );
 };

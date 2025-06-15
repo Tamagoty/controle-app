@@ -5,19 +5,30 @@ import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import Button from '../Button/Button';
 import styles from './ExpensePaymentForm.module.css';
+import { FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 
 const ExpensePaymentForm = ({ expense, onSuccess }) => {
   const [amount, setAmount] = useState(expense.balance > 0 ? expense.balance.toFixed(2) : '0.00');
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(true);
+  
+  // Estados para controlar a edição
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
+  const [editingAmount, setEditingAmount] = useState('');
+  
   const notify = useNotify();
 
   useEffect(() => {
     const fetchPayments = async () => {
       setListLoading(true);
       try {
-        const { data, error } = await supabase.from('expense_payments').select('*').eq('expense_id', expense.id);
+        const { data, error } = await supabase
+          .from('expense_payments')
+          .select('*')
+          .eq('expense_id', expense.id)
+          .order('payment_date', { ascending: false });
+          
         if (error) throw error;
         setPayments(data || []);
       } catch (error) {
@@ -55,6 +66,58 @@ const ExpensePaymentForm = ({ expense, onSuccess }) => {
     }
   };
 
+  const handleDeletePayment = async (paymentId) => {
+    if (window.confirm('Tem a certeza que quer apagar este pagamento?')) {
+      try {
+        const { error } = await supabase.from('expense_payments').delete().eq('id', paymentId);
+        if (error) throw error;
+        notify.success('Pagamento apagado com sucesso!');
+        if (onSuccess) onSuccess();
+      } catch (error) {
+        notify.error(error.message || 'Falha ao apagar o pagamento.');
+      }
+    }
+  };
+
+  const handleEditClick = (payment) => {
+    setEditingPaymentId(payment.id);
+    setEditingAmount(payment.amount_paid.toFixed(2));
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPaymentId(null);
+    setEditingAmount('');
+  };
+
+  const handleUpdatePayment = async () => {
+    const paymentToEdit = payments.find(p => p.id === editingPaymentId);
+    const totalPaidByOthers = payments
+      .filter(p => p.id !== editingPaymentId)
+      .reduce((acc, p) => acc + p.amount_paid, 0);
+      
+    const maxAllowedValue = expense.amount - totalPaidByOthers;
+    const newAmount = parseFloat(editingAmount);
+
+    if (!newAmount || newAmount <= 0 || newAmount > maxAllowedValue + 0.01) {
+      notify.error(`Valor inválido. O máximo permitido é R$ ${maxAllowedValue.toFixed(2)}.`);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('expense_payments')
+        .update({ amount_paid: newAmount })
+        .eq('id', editingPaymentId);
+
+      if (error) throw error;
+      notify.success('Pagamento atualizado!');
+      handleCancelEdit();
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      notify.error(error.message || 'Falha ao atualizar o pagamento.');
+    }
+  };
+
   return (
     <div>
       <form onSubmit={handleSubmit} className={styles.formSection}>
@@ -74,19 +137,37 @@ const ExpensePaymentForm = ({ expense, onSuccess }) => {
         </div>
       </form>
 
-       <div className={styles.paymentsList}>
+      <div className={styles.paymentsList}>
         <h4>Histórico de Pagamentos</h4>
         {listLoading ? <p>A carregar...</p> : payments.length > 0 ? (
           <ul>
             {payments.map(p => (
-              <li key={p.id}>
-                <span>{new Date(p.payment_date).toLocaleDateString()}</span>
-                <span>R$ {p.amount_paid.toFixed(2)}</span>
+              <li key={p.id} className={editingPaymentId === p.id ? styles.editingItem : ''}>
+                {editingPaymentId === p.id ? (
+                  <>
+                    <input type="number" value={editingAmount} onChange={(e) => setEditingAmount(e.target.value)} className={styles.editInput} autoFocus/>
+                    <div className={styles.paymentActions}>
+                      <Button icon={FaCheck} variant="success" isIconOnly onClick={handleUpdatePayment}>Guardar</Button>
+                      <Button icon={FaTimes} variant="ghost" isIconOnly onClick={handleCancelEdit}>Cancelar</Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.paymentInfo}>
+                      <span className={styles.paymentDate}>{new Date(p.payment_date).toLocaleDateString()}</span>
+                      <span className={styles.paymentAmount}>R$ {p.amount_paid.toFixed(2)}</span>
+                    </div>
+                    <div className={styles.paymentActions}>
+                      <Button icon={FaEdit} isIconOnly onClick={() => handleEditClick(p)}>Editar</Button>
+                      <Button icon={FaTrash} variant="danger" isIconOnly onClick={() => handleDeletePayment(p.id)}>Apagar</Button>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>
         ) : (
-          <p>Nenhum pagamento registado.</p>
+          <p className={styles.noPayments}>Nenhum pagamento registado.</p>
         )}
       </div>
     </div>

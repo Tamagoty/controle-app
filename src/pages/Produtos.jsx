@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { FaPlus, FaEdit } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext'; // <-- Importa o nosso hook de autenticação
+import { FaPlus, FaEdit, FaWarehouse } from 'react-icons/fa';
 import Table from '../components/Table/Table';
 import Card from '../components/Card/Card';
 import Button from '../components/Button/Button';
 import Modal from '../components/Modal/Modal';
 import ProductForm from '../components/ProductForm/ProductForm';
+import StockAdjustmentForm from '../components/StockAdjustmentForm/StockAdjustmentForm';
 import ToggleSwitch from '../components/ToggleSwitch/ToggleSwitch';
 import { useNotify } from '../hooks/useNotify';
 import styles from './Produtos.module.css';
@@ -15,9 +17,14 @@ import styles from './Produtos.module.css';
 const Produtos = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [adjustingStockProduct, setAdjustingStockProduct] = useState(null);
   const notify = useNotify();
+  const { role } = useAuth(); // <-- Obtém o papel do utilizador logado
+
+  const canManage = role === 'admin' || role === 'gestor'; // <-- Verifica se tem permissão
 
   const fetchProducts = async () => {
     try {
@@ -47,19 +54,26 @@ const Produtos = () => {
     }
   };
 
-  const handleOpenModal = (product = null) => {
+  const openFormModal = (product = null) => {
     setEditingProduct(product);
-    setIsModalOpen(true);
+    setIsFormModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const openStockModal = (product) => {
+    setAdjustingStockProduct(product);
+    setIsStockModalOpen(true);
+  };
+
+  const handleCloseModals = () => {
+    setIsFormModalOpen(false);
+    setIsStockModalOpen(false);
     setEditingProduct(null);
+    setAdjustingStockProduct(null);
   };
 
   const handleSuccess = () => {
     fetchProducts();
-    handleCloseModal();
+    handleCloseModals();
   };
   
   const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -68,7 +82,6 @@ const Produtos = () => {
     {
       header: 'Produto',
       key: 'name',
-      sortable: true,
       Cell: ({ row }) => (
         <div>
           <strong>{row.name}</strong>
@@ -77,14 +90,20 @@ const Produtos = () => {
       )
     },
     {
-      header: 'Descrição',
-      key: 'description',
-      Cell: ({ row }) => <p className={styles.descriptionCell}>{row.description}</p>
+      header: 'Stock',
+      key: 'stock_quantity',
+      Cell: ({ row }) => (
+        <div className={styles.stockCell}>
+          <span className={row.stock_quantity <= 0 ? styles.stockEmpty : ''}>
+            {row.stock_quantity}
+          </span>
+          <span className={styles.subtext}>{row.unit_of_measure}</span>
+        </div>
+      )
     },
     {
       header: 'Preços (C/V)',
       key: 'sale_price',
-      sortable: true,
       Cell: ({ row }) => (
         <div>
           <strong>{formatCurrency(row.sale_price)}</strong>
@@ -93,26 +112,22 @@ const Produtos = () => {
       )
     },
     {
-      header: 'Tipo / Un.',
-      key: 'product_type',
-      sortable: true,
-      Cell: ({ row }) => (
-        <div>
-          <strong>{row.product_type}</strong>
-          <div className={styles.subtext}>{row.unit_of_measure}</div>
-        </div>
-      )
-    },
-    {
       header: 'Status',
       key: 'is_active',
-      sortable: true,
-      Cell: ({ row }) => <ToggleSwitch checked={row.is_active} onChange={(status) => handleStatusChange(row.id, status)} />
+      Cell: ({ row }) => <ToggleSwitch checked={row.is_active} onChange={(status) => handleStatusChange(row.id, status)} disabled={!canManage} />
     },
     {
       header: 'Ações',
       key: 'actions',
-      Cell: ({ row }) => <Button icon={FaEdit} isIconOnly onClick={() => handleOpenModal(row)}>Editar</Button>
+      Cell: ({ row }) => (
+        // Renderiza os botões apenas se o utilizador tiver permissão
+        canManage && (
+          <div className={styles.actionsCell}>
+              <Button icon={FaWarehouse} isIconOnly onClick={() => openStockModal(row)}>Ajustar Stock</Button>
+              <Button icon={FaEdit} isIconOnly onClick={() => openFormModal(row)}>Editar</Button>
+          </div>
+        )
+      )
     }
   ];
 
@@ -120,22 +135,39 @@ const Produtos = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
         <h1>Produtos</h1>
-        <Button icon={FaPlus} onClick={() => handleOpenModal()}>
-          Novo Produto
-        </Button>
+        {/* Renderiza o botão "Novo Produto" apenas se tiver permissão */}
+        {canManage && (
+          <Button icon={FaPlus} onClick={() => openFormModal()}>
+            Novo Produto
+          </Button>
+        )}
       </div>
 
       <Card>
         {loading ? <p>A carregar produtos...</p> : <Table columns={columns} data={products} />}
       </Card>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
-        title={editingProduct ? 'Editar Produto' : 'Adicionar Novo Produto'}
-      >
-        <ProductForm onSuccess={handleSuccess} productToEdit={editingProduct} />
-      </Modal>
+      {canManage && (
+        <>
+          <Modal 
+            isOpen={isFormModalOpen} 
+            onClose={handleCloseModals} 
+            title={editingProduct ? 'Editar Produto' : 'Adicionar Novo Produto'}
+          >
+            <ProductForm onSuccess={handleSuccess} productToEdit={editingProduct} />
+          </Modal>
+
+          {adjustingStockProduct && (
+            <Modal
+                isOpen={isStockModalOpen}
+                onClose={handleCloseModals}
+                title="Ajuste Manual de Stock"
+            >
+                <StockAdjustmentForm product={adjustingStockProduct} onSuccess={handleSuccess} />
+            </Modal>
+          )}
+        </>
+      )}
     </div>
   );
 };

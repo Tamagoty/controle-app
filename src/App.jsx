@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx - VERSÃO REVERTIDA
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -11,6 +11,8 @@ import Compras from './pages/Compras';
 import Produtos from './pages/Produtos';
 import Pessoas from './pages/Pessoas';
 import DespesasGerais from './pages/Financeiro/DespesasGerais';
+import CostCenters from './pages/Financeiro/CostCenters'; // <-- Importa a nova página
+import Socios from './pages/Capital/Socios';
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
           <Route path="produtos" element={<Produtos />} />
           <Route path="pessoas" element={<Pessoas />} />
           <Route path="financeiro/despesas" element={<DespesasGerais />} />
+          <Route path="financeiro/centros-de-custo" element={<CostCenters />} /> {/* <-- Nova rota */}
+          <Route path="capital/socios" element={<Socios />} />
         </Route>
       </Routes>
     </>

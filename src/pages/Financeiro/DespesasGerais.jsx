@@ -1,6 +1,6 @@
 // src/pages/Financeiro/DespesasGerais.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { FaPlus, FaMoneyBillWave } from 'react-icons/fa';
 import Card from '../../components/Card/Card';
@@ -15,6 +15,7 @@ import { useNotify } from '../../hooks/useNotify';
 const DespesasGerais = () => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState({ key: 'expense_date', direction: 'descending' });
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
@@ -38,6 +39,26 @@ const DespesasGerais = () => {
     fetchExpenses();
   }, []);
 
+  const sortedExpenses = useMemo(() => {
+    let sortableItems = [...expenses];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'ascending' ? -1 : 1;
+        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'ascending' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [expenses, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
   const handleSuccess = () => {
     fetchExpenses();
     setIsExpenseModalOpen(false);
@@ -53,6 +74,7 @@ const DespesasGerais = () => {
     {
       header: 'Descrição / Categoria',
       key: 'description',
+      sortable: true,
       Cell: ({ row }) => (
         <div>
           <strong>{row.description}</strong>
@@ -65,6 +87,7 @@ const DespesasGerais = () => {
     {
       header: 'Data / C. Custo',
       key: 'expense_date',
+      sortable: true,
       Cell: ({ row }) => (
         <div>
             <strong>{new Date(row.expense_date).toLocaleDateString()}</strong>
@@ -77,11 +100,13 @@ const DespesasGerais = () => {
     {
       header: 'Status Pagamento',
       key: 'balance',
+      sortable: true,
       Cell: ({ row }) => <ProgressBar total={row.amount} paid={row.total_paid} />
     },
     {
       header: 'Ações',
       key: 'actions',
+      sortable: false,
       Cell: ({ row }) => (
         <Button icon={FaMoneyBillWave} isIconOnly onClick={() => openPaymentModal(row)}>
             Pagar
@@ -105,7 +130,9 @@ const DespesasGerais = () => {
         ) : (
           <Table 
             columns={columns} 
-            data={expenses}
+            data={sortedExpenses}
+            onSort={requestSort}
+            sortConfig={sortConfig}
           />
         )}
       </Card>

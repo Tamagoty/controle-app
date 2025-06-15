@@ -20,7 +20,6 @@ import ContasAPagar from './pages/Financeiro/ContasAPagar';
 import RelatorioFinanceiro from './pages/Relatorios/RelatorioFinanceiro';
 import Socios from './pages/Capital/Socios';
 import UserManagement from './pages/Admin/UserManagement'; // Importa a nova página de gestão de utilizadores
-import TransacoesSocios from './pages/Capital/TransacoesSocios'; // Importa a página de transações de sócios
 
 function App() {
   return (
@@ -32,19 +31,18 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-          <Route path="vendas" element={<Vendas />} />
-          <Route path="compras" element={<Compras />} />
-          <Route path="produtos" element={<Produtos />} />
-          <Route path="pessoas" element={<Pessoas />} />
-          <Route path="financeiro/despesas" element={<DespesasGerais />} />
-          <Route path="financeiro/comissoes" element={<Comissoes />} />
-          <Route path="financeiro/centros-de-custo" element={<CostCenters />} />
-          <Route path="financeiro/contas-a-receber" element={<ContasAReceber />} />
-          <Route path="financeiro/contas-a-pagar" element={<ContasAPagar />} />
-          <Route path="relatorios/financeiro" element={<RelatorioFinanceiro />} />
-          <Route path="capital/socios" element={<Socios />} />
-          <Route path="capital/transacoes" element={<TransacoesSocios />} />
-          <Route path="admin/users" element={<UserManagement />} />
+            <Route path="vendas" element={<Vendas />} />
+            <Route path="compras" element={<Compras />} />
+            <Route path="produtos" element={<Produtos />} />
+            <Route path="pessoas" element={<Pessoas />} />
+            <Route path="financeiro/despesas" element={<DespesasGerais />} />
+            <Route path="financeiro/comissoes" element={<Comissoes />} />
+            <Route path="financeiro/centros-de-custo" element={<CostCenters />} />
+            <Route path="financeiro/contas-a-receber" element={<ContasAReceber />} />
+            <Route path="financeiro/contas-a-pagar" element={<ContasAPagar />} />
+            <Route path="relatorios/financeiro" element={<RelatorioFinanceiro />} />
+            <Route path="capital/socios" element={<Socios />} />
+            <Route path="admin/users" element={<UserManagement />} /> {/* <-- Nova rota */}
           </Route>
         </Route>
       </Routes>

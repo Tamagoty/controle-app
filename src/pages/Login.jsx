@@ -37,23 +37,11 @@ const Login = () => {
         <form onSubmit={handleLogin}>
           <div className={styles.formGroup}>
             <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required/>
           </div>
           <div className={styles.formGroup}>
             <label htmlFor="password">Palavra-passe</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required/>
           </div>
           <Button type="submit" disabled={loading} className={styles.loginButton}>
             {loading ? 'A entrar...' : 'Entrar'}

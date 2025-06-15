@@ -1,90 +1,134 @@
 /* src/components/Sidebar/Sidebar.module.css */
 
 .sidebar {
-  /* Box Model */
-  width: 250px; /* Largura fixa */
-  padding: var(--spacing-lg);
-  
-  /* Posição */
-  position: fixed; /* Fixa na tela */
-  top: 0;
-  left: 0;
-  height: 100vh; /* Ocupa a altura toda */
-  z-index: 1000; /* Garante que fique acima do conteúdo */
-
-  /* Aparência */
-  background-color: var(--color-bg-secondary);
-  border-right: 1px solid var(--color-border);
-  
-  /* Layout Interno */
-  display: flex;
-  flex-direction: column;
-
-  /* Transição para o movimento de abrir/fechar */
-  transition: transform var(--transition-speed);
+    width: 250px;
+    padding: var(--spacing-lg);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    background-color: var(--color-bg-secondary);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform var(--transition-speed);
 }
 
 .logoContainer {
-  margin-bottom: var(--spacing-xl);
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-  text-align: center;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
 }
 
 .logo {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-xl);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xl);
 }
 
 .nav {
-  flex-grow: 1; /* Faz a navegação ocupar o espaço restante */
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .navList {
-  list-style: none;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.navItem {
-  margin-bottom: var(--spacing-sm);
-}
-
+/* Estilo base para todos os links */
 .navLink {
-  display: block;
-  padding: var(--spacing-sm) var(--spacing-md);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  border-radius: var(--border-radius-md);
-  transition: all var(--transition-speed);
+    display: block;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: var(--border-radius-md);
+    transition: all var(--transition-speed);
 }
 
 .navLink:hover {
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
 }
 
-/* Estilo para o item de menu ativo (agora aplicado diretamente ao NavLink) */
+/* Estilo para o link ATIVO (seja ele principal ou sub-link) */
 .navLink.active {
-  background-color: var(--color-primary);
-  color: var(--color-text-primary);
-  font-weight: 600;
+    background-color: var(--color-primary);
+    color: var(--color-text-primary);
+    font-weight: 600;
 }
 
+.footer {
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
 
-/* =================================
-   RESPONSIVIDADE
-   =================================
-*/
+.logoutButton {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-md);
+}
 
-/* Em ecrãs pequenos, a sidebar fica escondida fora da tela por padrão */
+/* Estilos para seções expansíveis */
+.navSection {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.sectionHeader {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--color-text-primary);
+    font-size: 1rem;
+    font-weight: bold;
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    text-align: left;
+}
+
+.sectionHeader:hover {
+    background-color: var(--color-bg-tertiary);
+}
+
+.chevron {
+    transition: transform 0.3s ease;
+}
+
+.chevron.open {
+    transform: rotate(180deg);
+}
+
+.sectionLinks {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+    background-color: var(--color-bg-primary);
+}
+
+.sectionLinks.open {
+    max-height: 500px; /* Ajuste conforme necessário */
+}
+
+/* Estilo para os sub-links (adiciona indentação) */
+.subLink {
+    padding-left: calc(var(--spacing-md) * 2) !important;
+}
+
 @media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-
-  /* Quando a classe 'open' é adicionada, a sidebar desliza para a tela */
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: var(--shadow-lg);
-  }
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--shadow-lg);
+    }
 }

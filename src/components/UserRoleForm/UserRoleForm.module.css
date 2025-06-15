@@ -1,0 +1,52 @@
+/* src/components/UserRoleForm/UserRoleForm.module.css */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.userInfo {
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.userInfo label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.userInfo p {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.formGroup label {
+  font-weight: 500;
+}
+
+.select {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-md);
+}

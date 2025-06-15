@@ -1,4 +1,4 @@
-// src/main.jsx - VERSÃO REVERTIDA
+// src/main.jsx
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -10,7 +10,6 @@ import './styles/theme.css';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      {/* Mantemos o AuthProvider para simular o utilizador logado */}
       <AuthProvider>
         <App />
       </AuthProvider>

@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false # Define como 'true' se você quiser forçar este redirecionamento mesmo se um arquivo físico existir (geralmente não é necessário para SPAs)

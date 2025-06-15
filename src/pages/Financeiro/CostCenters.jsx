@@ -1,15 +1,15 @@
 // src/pages/Financeiro/CostCenters.jsx
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
-import { FaPlus, FaEdit } from 'react-icons/fa';
-import Card from '../../components/Card/Card';
-import Table from '../../components/Table/Table';
-import Button from '../../components/Button/Button';
-import Modal from '../../components/Modal/Modal';
-import CostCenterForm from '../../components/CostCenterForm/CostCenterForm';
-import ToggleSwitch from '../../components/ToggleSwitch/ToggleSwitch';
-import { useNotify } from '../../hooks/useNotify';
+import React, { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { FaPlus, FaEdit } from "react-icons/fa";
+import Card from "../../components/Card/Card";
+import Table from "../../components/Table/Table";
+import Button from "../../components/Button/Button";
+import Modal from "../../components/Modal/Modal";
+import CostCenterForm from "../../components/CostCenterForm/CostCenterForm";
+import ToggleSwitch from "../../components/ToggleSwitch/ToggleSwitch";
+import { useNotify } from "../../hooks/useNotify";
 
 const CostCenters = () => {
   const [costCenters, setCostCenters] = useState([]);
@@ -21,11 +21,13 @@ const CostCenters = () => {
   const fetchCostCenters = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.rpc('get_cost_centers');
+      const { data, error } = await supabase.rpc("get_cost_centers");
       if (error) throw error;
       setCostCenters(data || []);
     } catch (error) {
-      notify.error(error.message || 'Não foi possível carregar os centros de custo.');
+      notify.error(
+        error.message || "Não foi possível carregar os centros de custo."
+      );
     } finally {
       setLoading(false);
     }
@@ -44,17 +46,15 @@ const CostCenters = () => {
         finalization_date: newStatus ? null : new Date().toISOString(),
       };
 
-      await supabase.from('cost_centers').update(updatePayload).eq('id', id);
-      
+      await supabase.from("cost_centers").update(updatePayload).eq("id", id);
+
       // Atualiza o estado local para um feedback visual instantâneo.
-      setCostCenters(current => 
-        current.map(cc => 
-          cc.id === id ? { ...cc, ...updatePayload } : cc
-        )
+      setCostCenters((current) =>
+        current.map((cc) => (cc.id === id ? { ...cc, ...updatePayload } : cc))
       );
-      notify.success('Status atualizado!');
+      notify.success("Status atualizado!");
     } catch (error) {
-      notify.error('Falha ao atualizar o status.');
+      notify.error("Falha ao atualizar o status.");
     }
   };
 
@@ -74,53 +74,83 @@ const CostCenters = () => {
   };
 
   const columns = [
-    { header: 'Nome', key: 'name', accessor: 'name', sortable: true },
-    { 
-      header: 'Datas (Criação/Fim)',
-      key: 'created_at',
+    { header: "Nome", key: "name", accessor: "name", sortable: true },
+    {
+      header: "Datas (Criação/Fim)",
+      key: "created_at",
       sortable: true,
       Cell: ({ row }) => (
         <div>
           <strong>{new Date(row.created_at).toLocaleDateString()}</strong>
           {row.finalization_date && (
-            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+            <div
+              style={{
+                fontSize: "var(--font-size-sm)",
+                color: "var(--color-text-secondary)",
+              }}
+            >
               Finalizado: {new Date(row.finalization_date).toLocaleDateString()}
             </div>
           )}
         </div>
-      )
+      ),
     },
     {
-      header: 'Status',
-      key: 'is_active',
-      Cell: ({ row }) => <ToggleSwitch checked={row.is_active} onChange={(status) => handleStatusChange(row.id, status)} />
+      header: "Status",
+      key: "is_active",
+      Cell: ({ row }) => (
+        <ToggleSwitch
+          checked={row.is_active}
+          onChange={(status) => handleStatusChange(row.id, status)}
+        />
+      ),
     },
     {
-      header: 'Ações',
-      key: 'actions',
-      Cell: ({ row }) => <Button icon={FaEdit} isIconOnly onClick={() => handleOpenModal(row)}>Editar</Button>
-    }
+      header: "Ações",
+      key: "actions",
+      Cell: ({ row }) => (
+        <Button icon={FaEdit} isIconOnly onClick={() => handleOpenModal(row)}>
+          Editar
+        </Button>
+      ),
+    },
   ];
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "var(--spacing-lg)",
+        }}
+      >
         <h1>Centros de Custo</h1>
         <Button icon={FaPlus} onClick={() => handleOpenModal()}>
           Novo Centro de Custo
         </Button>
       </div>
-      
+
       <Card>
-        {loading ? <p>A carregar...</p> : <Table columns={columns} data={costCenters} />}
+        {loading ? (
+          <p>A carregar...</p>
+        ) : (
+          <Table columns={columns} data={costCenters} />
+        )}
       </Card>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
-        title={editingCostCenter ? 'Editar Centro de Custo' : 'Novo Centro de Custo'}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={
+          editingCostCenter ? "Editar Centro de Custo" : "Novo Centro de Custo"
+        }
       >
-        <CostCenterForm onSuccess={handleSuccess} costCenterToEdit={editingCostCenter} />
+        <CostCenterForm
+          onSuccess={handleSuccess}
+          costCenterToEdit={editingCostCenter}
+        />
       </Modal>
     </div>
   );

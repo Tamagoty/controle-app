@@ -1,0 +1,51 @@
+/* src/components/RecentActivity/RecentActivity.module.css */
+
+.container {
+    width: 100%;
+}
+
+.title {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.saleInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.clientName {
+    font-weight: 500;
+}
+
+.date {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.amount {
+    font-weight: bold;
+    color: var(--color-success);
+}
+
+.noActivity {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}

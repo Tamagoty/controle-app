@@ -1,0 +1,52 @@
+/* src/pages/Relatorios/RelatorioFinanceiro.module.css */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.filterContainer {
+    display: flex;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) !important;
+}
+
+.dateFilter {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.dateFilter label {
+    font-weight: 500;
+}
+
+.dateFilter input[type="date"] {
+    padding: var(--spacing-sm);
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-primary);
+}
+
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.inflow {
+    color: var(--color-success);
+    font-weight: bold;
+}
+
+.outflow {
+    color: var(--color-danger);
+    font-weight: bold;
+}
+

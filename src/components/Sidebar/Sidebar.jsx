@@ -23,12 +23,15 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
             <li className={styles.navItem}><NavLink to="/" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Dashboard</NavLink></li>
             <li className={styles.navItem}><NavLink to="/vendas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Vendas</NavLink></li>
             <li className={styles.navItem}><NavLink to="/compras" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Compras</NavLink></li>
-            <li className={styles.navItem}><NavLink to="/produtos" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Produtos</NavLink></li>
-            <li className={styles.navItem}><NavLink to="/pessoas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Pessoas</NavLink></li>
+            <li className={styles.navItem}><NavLink to="/financeiro/contas-a-receber" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Contas a Receber</NavLink></li>
+            <li className={styles.navItem}><NavLink to="/financeiro/contas-a-pagar" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Contas a Pagar</NavLink></li>
             <li className={styles.navItem}><NavLink to="/financeiro/despesas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Despesas</NavLink></li>
             <li className={styles.navItem}><NavLink to="/financeiro/comissoes" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Comissões</NavLink></li>
             <li className={styles.navItem}><NavLink to="/financeiro/centros-de-custo" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Centros de Custo</NavLink></li>
+            <li className={styles.navItem}><NavLink to="/relatorios/financeiro" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Relatório Financeiro</NavLink></li>
             <li className={styles.navItem}><NavLink to="/capital/socios" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Sócios</NavLink></li>
+            <li className={styles.navItem}><NavLink to="/produtos" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Produtos</NavLink></li>
+            <li className={styles.navItem}><NavLink to="/pessoas" className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink} onClick={handleLinkClick}>Pessoas</NavLink></li>
           </ul>
         </nav>
       </div>

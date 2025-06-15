@@ -1,0 +1,6 @@
+/* src/components/SalesChart/SalesChart.module.css */
+
+.chartContainer {
+    width: 100%;
+    height: 300px;
+}

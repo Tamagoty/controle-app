@@ -3,43 +3,44 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import StatCard from '../components/StatCard/StatCard';
+import SalesChart from '../components/SalesChart/SalesChart';
+import RecentActivity from '../components/RecentActivity/RecentActivity';
+import Card from '../components/Card/Card';
 import styles from './Dashboard.module.css';
 import { useNotify } from '../hooks/useNotify';
 
 const Dashboard = () => {
-  const [summary, setSummary] = useState(null);
+  const [dashboardData, setDashboardData] = useState({
+    summary: {},
+    sales_over_time: [],
+    recent_sales: []
+  });
   const [loading, setLoading] = useState(true);
   const notify = useNotify();
 
   useEffect(() => {
-    const fetchSummary = async () => {
+    const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase.rpc('get_dashboard_summary');
+        // Chamamos a nossa nova super função RPC
+        const { data, error } = await supabase.rpc('get_full_dashboard_data');
         
-        if (error) {
-          throw error;
-        }
-
-        setSummary(data);
+        if (error) throw error;
+        setDashboardData(data);
       } catch (error) {
-        console.error('Erro ao buscar resumo do dashboard:', error);
+        console.error('Erro ao buscar dados do dashboard:', error);
         notify.error('Não foi possível carregar os dados do dashboard.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSummary();
-  }, []);
+    fetchDashboardData();
+  }, []); // O array de dependências está vazio para rodar apenas uma vez.
 
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined) return 'R$ 0,00';
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+
+  const { summary, sales_over_time, recent_sales } = dashboardData;
 
   return (
     <div>
@@ -47,23 +48,23 @@ const Dashboard = () => {
       {loading ? (
         <p>A carregar resumo...</p>
       ) : (
-        <div className={styles.statsGrid}>
-          <StatCard 
-            title="Vendas este Mês" 
-            value={formatCurrency(summary?.sales_total_month)} 
-          />
-          <StatCard 
-            title="Compras este Mês" 
-            value={formatCurrency(summary?.purchases_total_month)} 
-          />
-          <StatCard 
-            title="Novos Clientes" 
-            value={summary?.new_clients_month || 0} 
-          />
-          <StatCard 
-            title="Saldo em Caixa" 
-            value={formatCurrency(summary?.cash_balance)} 
-          />
+        <div className={styles.dashboardLayout}>
+          <div className={styles.summaryGrid}>
+            <StatCard title="Vendas este Mês" value={formatCurrency(summary.sales_total_month)} />
+            <StatCard title="Compras este Mês" value={formatCurrency(summary.purchases_total_month)} />
+            <StatCard title="Novos Clientes" value={summary.new_clients_month || 0} />
+            <StatCard title="Saldo em Caixa" value={formatCurrency(summary.cash_balance)} />
+            <StatCard title="Valor do Stock" value={formatCurrency(summary.total_stock_value)} />
+          </div>
+
+          <div className={styles.mainContentGrid}>
+            <Card>
+                <SalesChart data={sales_over_time} />
+            </Card>
+            <Card>
+                <RecentActivity sales={recent_sales} />
+            </Card>
+          </div>
         </div>
       )}
     </div>

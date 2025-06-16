@@ -34,30 +34,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    const init = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-
-      if (error) {
-        console.error("Erro ao obter sessão:", error);
-      }
-
+ useEffect(() => {
+  const { data: authListener } = supabase.auth.onAuthStateChange(
+    async (_event, session) => {
       await loadUserSession(session);
       setLoading(false);
-    };
+    }
+  );
 
-    init();
+  // fallback: se nada acontecer em 2s, libera o app mesmo assim
+  const timeout = setTimeout(() => setLoading(false), 2000);
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        await loadUserSession(session);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
+  return () => {
+    authListener.subscription.unsubscribe();
+    clearTimeout(timeout);
+  };
+}, []);
 
   const value = {
     signIn: (data) => supabase.auth.signInWithPassword(data),

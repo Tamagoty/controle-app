@@ -1,8 +1,8 @@
 // src/components/ProtectedRoute.jsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate, Outlet } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 
 // Um componente simples de ecrã de carregamento para feedback visual
 const LoadingScreen = () => {
@@ -12,8 +12,8 @@ const LoadingScreen = () => {
       justifyContent: 'center',
       alignItems: 'center',
       height: '100vh',
-      backgroundColor: '#1a1a1a', // Usando a cor de fundo do nosso tema
-      color: '#e6e6e6', // Usando a cor de texto do nosso tema
+      backgroundColor: '#1a1a1a',
+      color: '#e6e6e6',
       fontFamily: "'Inter', sans-serif"
     }}>
       <h1>A carregar sessão...</h1>
@@ -21,24 +21,31 @@ const LoadingScreen = () => {
   );
 };
 
-
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
-  // Enquanto a verificação inicial da sessão (após um F5) estiver a decorrer,
-  // exibe um ecrã de carregamento em vez de uma tela preta.
-  // Isto dá um feedback visual ao utilizador e ajuda a resolver problemas de 'timing'.
+  // Esta é a nova abordagem, mais robusta.
+  // Usamos um 'useEffect' para observar as mudanças no estado de 'loading' e 'user'.
+  useEffect(() => {
+    // Só tomamos uma decisão DEPOIS que o carregamento inicial termina.
+    if (!loading) {
+      // Se, após o carregamento, não houver utilizador, NÓS ORDENAMOS a navegação.
+      if (!user) {
+        navigate('/login', { replace: true });
+      }
+    }
+  }, [loading, user, navigate]); // Este efeito corre sempre que estes valores mudam.
+
+  // 1. Enquanto a sessão está sendo verificada, mostramos um ecrã de carregamento.
   if (loading) {
     return <LoadingScreen />;
   }
 
-  // Após o carregamento, se não houver utilizador, redireciona para a página de login.
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Se houver utilizador, renderiza a página solicitada.
-  return <Outlet />;
+  // 2. Se houver um utilizador, renderizamos a página.
+  //    Se não houver, renderizamos 'null' por um instante, enquanto o 'useEffect' acima
+  //    faz o seu trabalho de redirecionar. Isto evita a "tela preta".
+  return user ? <Outlet /> : null;
 };
 
 export default ProtectedRoute;

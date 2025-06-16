@@ -8,20 +8,11 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Esta função de logout robusta força uma limpeza completa no navegador.
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setUserRole(null);
-    // Força um recarregamento para a página de login, limpando qualquer estado inconsistente.
-    window.location.replace('/login');
-  };
+  const [loading, setLoading] = useState(true); // <-- ESTADO CRUCIAL: Começa como true!
 
   useEffect(() => {
-    // O 'onAuthStateChange' é a única fonte da verdade. Ele é acionado
-    // na carga inicial (F5) e em qualquer mudança de estado.
+    // O onAuthStateChange é a única fonte da verdade. Ele é acionado na carga inicial (F5)
+    // e em qualquer mudança de estado, garantindo consistência.
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
@@ -35,8 +26,7 @@ export const AuthProvider = ({ children }) => {
               .eq('user_id', currentUser.id)
               .single();
             
-            // Se não conseguir obter o papel, lança um erro para forçar o logout.
-            // Isto impede que um utilizador fique logado sem um papel válido.
+            // Se não conseguir obter o papel, lança um erro para o bloco catch.
             if (error) throw error;
 
             setUserRole(roleData?.role || null);
@@ -44,11 +34,12 @@ export const AuthProvider = ({ children }) => {
             setUserRole(null);
           }
         } catch (error) {
-          console.error("AuthContext Error: Falha ao validar sessão. A forçar logout.", error);
-          // Se qualquer erro ocorrer, força o logout para evitar a "tela preta".
-          await handleSignOut();
+          console.error("AuthContext Error: Falha ao validar a sessão.", error);
+          setUser(null);
+          setUserRole(null);
         } finally {
-          // A cláusula 'finally' GARANTE que o loading seja definido como falso.
+          // A cláusula 'finally' GARANTE que o loading seja definido como falso,
+          // permitindo que a aplicação seja renderizada, mesmo que ocorra um erro.
           setLoading(false);
         }
       }
@@ -61,10 +52,15 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     signIn: (data) => supabase.auth.signInWithPassword(data),
-    signOut: handleSignOut,
+    signOut: async () => {
+        await supabase.auth.signOut();
+        // Força um recarregamento completo para a página de login,
+        // limpando qualquer estado inconsistente do navegador.
+        window.location.replace('/login');
+    },
     user,
     role: userRole,
-    loading, // Exporta o estado de carregamento para as rotas
+    loading, // <-- Exporta o estado de carregamento para as rotas.
   };
 
   return (

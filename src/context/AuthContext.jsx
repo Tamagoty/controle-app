@@ -10,48 +10,45 @@ export const AuthProvider = ({ children }) => {
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Esta função de logout é a nossa "arma secreta" para forçar um estado limpo.
+  // Esta função de logout robusta força uma limpeza completa no navegador.
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
     setUserRole(null);
-    // Força um recarregamento completo para a página de login.
-    // Esta é a maneira mais eficaz de limpar qualquer estado inconsistente do navegador.
+    // Força um recarregamento para a página de login, limpando qualquer estado inconsistente.
     window.location.replace('/login');
   };
 
   useEffect(() => {
-    // A abordagem final e mais robusta.
-    // O 'onAuthStateChange' é a única fonte da verdade e agora inclui
-    // um tratamento de erros completo para garantir que a aplicação nunca fique "presa".
+    // O 'onAuthStateChange' é a única fonte da verdade. Ele é acionado
+    // na carga inicial (F5) e em qualquer mudança de estado.
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
-          if (session?.user) {
-            // Se existe um utilizador, busca o seu papel.
+          const currentUser = session?.user;
+          setUser(currentUser ?? null);
+
+          if (currentUser) {
             const { data: roleData, error } = await supabase
               .from('user_roles')
               .select('role')
-              .eq('user_id', session.user.id)
+              .eq('user_id', currentUser.id)
               .single();
             
-            // Se houver um erro ao buscar o papel, o erro será capturado pelo 'catch'.
+            // Se não conseguir obter o papel, lança um erro para forçar o logout.
+            // Isto impede que um utilizador fique logado sem um papel válido.
             if (error) throw error;
-            
-            setUser(session.user);
+
             setUserRole(roleData?.role || null);
           } else {
-            // Se não há sessão, limpa os dados.
-            setUser(null);
             setUserRole(null);
           }
         } catch (error) {
-          console.error("AuthContext Error: Falha ao validar a sessão. A forçar logout.", error);
+          console.error("AuthContext Error: Falha ao validar sessão. A forçar logout.", error);
           // Se qualquer erro ocorrer, força o logout para evitar a "tela preta".
           await handleSignOut();
         } finally {
-          // A cláusula 'finally' GARANTE que o loading seja definido como falso,
-          // permitindo que a aplicação seja renderizada, mesmo que ocorra um erro.
+          // A cláusula 'finally' GARANTE que o loading seja definido como falso.
           setLoading(false);
         }
       }
@@ -60,18 +57,19 @@ export const AuthProvider = ({ children }) => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []); // O array de dependências vazio é crucial.
+  }, []);
 
   const value = {
     signIn: (data) => supabase.auth.signInWithPassword(data),
-    signOut: handleSignOut, // Usa a nossa função de logout robusta.
+    signOut: handleSignOut,
     user,
     role: userRole,
+    loading, // Exporta o estado de carregamento para as rotas
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

@@ -5,8 +5,8 @@ import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Layout from './components/Layout/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute'; // <-- Importa a rota protegida
+import Login from './pages/Login'; // <-- Importa a página de Login
 import Dashboard from './pages/Dashboard';
 import Vendas from './pages/Vendas';
 import Compras from './pages/Compras';
@@ -19,8 +19,8 @@ import ContasAReceber from './pages/Financeiro/ContasAReceber';
 import ContasAPagar from './pages/Financeiro/ContasAPagar';
 import RelatorioFinanceiro from './pages/Relatorios/RelatorioFinanceiro';
 import Socios from './pages/Capital/Socios';
-import UserManagement from './pages/Admin/UserManagement'; // Importa a nova página de gestão de utilizadores
-import TransacoesSocios from './pages/Capital/TransacoesSocios'; // Importa a página de transações de sócios
+import TransacoesSocios from './pages/Capital/TransacoesSocios';
+import UserManagement from './pages/Admin/UserManagement';
 
 function App() {
   return (
@@ -28,23 +28,26 @@ function App() {
       <Toaster position="top-right" toastOptions={{ /* ... */ }}/>
       
       <Routes>
+        {/* Rota pública para o Login */}
         <Route path="/login" element={<Login />} />
+
+        {/* Rotas protegidas que requerem autenticação */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-          <Route path="vendas" element={<Vendas />} />
-          <Route path="compras" element={<Compras />} />
-          <Route path="produtos" element={<Produtos />} />
-          <Route path="pessoas" element={<Pessoas />} />
-          <Route path="financeiro/despesas" element={<DespesasGerais />} />
-          <Route path="financeiro/comissoes" element={<Comissoes />} />
-          <Route path="financeiro/centros-de-custo" element={<CostCenters />} />
-          <Route path="financeiro/contas-a-receber" element={<ContasAReceber />} />
-          <Route path="financeiro/contas-a-pagar" element={<ContasAPagar />} />
-          <Route path="relatorios/financeiro" element={<RelatorioFinanceiro />} />
-          <Route path="capital/socios" element={<Socios />} />
-          <Route path="capital/transacoes" element={<TransacoesSocios />} />
-          <Route path="admin/users" element={<UserManagement />} />
+            <Route path="vendas" element={<Vendas />} />
+            <Route path="compras" element={<Compras />} />
+            <Route path="produtos" element={<Produtos />} />
+            <Route path="pessoas" element={<Pessoas />} />
+            <Route path="financeiro/despesas" element={<DespesasGerais />} />
+            <Route path="financeiro/comissoes" element={<Comissoes />} />
+            <Route path="financeiro/centros-de-custo" element={<CostCenters />} />
+            <Route path="financeiro/contas-a-receber" element={<ContasAReceber />} />
+            <Route path="financeiro/contas-a-pagar" element={<ContasAPagar />} />
+            <Route path="relatorios/financeiro" element={<RelatorioFinanceiro />} />
+            <Route path="capital/socios" element={<Socios />} />
+            <Route path="capital/transacoes" element={<TransacoesSocios />} />
+            <Route path="admin/users" element={<UserManagement />} />
           </Route>
         </Route>
       </Routes>

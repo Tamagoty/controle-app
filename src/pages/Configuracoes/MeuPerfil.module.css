@@ -1,0 +1,36 @@
+/* src/pages/Configuracoes/MeuPerfil.module.css */
+
+.sectionCard {
+    margin-bottom: var(--spacing-lg);
+}
+
+.sectionTitle {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.infoGrid label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.infoGrid p {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.role {
+    text-transform: capitalize;
+    font-weight: bold !important;
+    color: var(--color-primary);
+}

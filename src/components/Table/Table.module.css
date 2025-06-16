@@ -1,11 +1,5 @@
 /* src/components/Table/Table.module.css */
 
-/*
-  Container da tabela.
-  A propriedade 'overflow-x: auto' é crucial para a responsividade.
-  Em ecrãs pequenos, permite que a tabela seja rolada horizontalmente
-  sem quebrar o layout da página.
-*/
 .tableContainer {
   width: 100%;
   overflow-x: auto;
@@ -17,22 +11,23 @@
 
 .table {
   width: 100%;
-  border-collapse: collapse; /* Remove o espaço entre as bordas das células */
+  border-collapse: collapse;
   text-align: left;
-  white-space: nowrap; /* Evita que o texto quebre, auxiliando a rolagem horizontal */
 }
 
-/* Estilização das linhas, tanto no cabeçalho quanto no corpo */
+/* Alteramos para 'normal' para permitir a quebra de texto em ecrãs pequenos */
+.table td, .table th {
+  white-space: normal;
+}
+
 .tr {
   border-bottom: 1px solid var(--color-border);
 }
 
-/* Remove a borda da última linha do corpo para um visual mais limpo */
 .table tbody .tr:last-child {
   border-bottom: none;
 }
 
-/* Cabeçalho da tabela (th) */
 .th {
   padding: var(--spacing-md) var(--spacing-lg);
   font-size: var(--font-size-sm);
@@ -40,9 +35,27 @@
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  user-select: none;
 }
 
-/* Células da tabela (td) */
+.sortableHeader {
+  cursor: pointer;
+}
+
+.sortableHeader:hover {
+  color: var(--color-text-primary);
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.sortIcon {
+  color: var(--color-primary);
+}
+
 .td {
   padding: var(--spacing-md) var(--spacing-lg);
   font-size: var(--font-size-md);
@@ -50,47 +63,53 @@
   vertical-align: middle;
 }
 
-/* Efeito de hover nas linhas do corpo da tabela */
 .table tbody .tr:hover {
   background-color: var(--color-bg-tertiary);
 }
 
-/* Estilo para a mensagem de "sem dados" */
 .tdEmpty {
   text-align: center;
   padding: var(--spacing-xl);
   color: var(--color-text-secondary);
 }
 
-/*
-  =================================
-  RESPONSIVIDADE PARA ECRÃS PEQUENOS
-  =================================
-  Para melhorar a experiência em telemóveis, podemos transformar
-  a tabela num formato de lista. O `data-label` no 'td' é para isso.
-  Por agora, focamos na rolagem horizontal que é mais simples e robusta.
-  A abordagem de "blocos" pode ser implementada se necessário.
-
+/* =================================
+   RESPONSIVIDADE PARA ECRÃS PEQUENOS
+   =================================
+*/
 @media (max-width: 768px) {
+  /* Esconde o cabeçalho tradicional */
   .table thead {
     display: none;
   }
+
+  /* Transforma a tabela, linhas e células em blocos */
   .table, .table tbody, .table .tr, .table .td {
     display: block;
     width: 100%;
   }
-  .table .tr {
-    margin-bottom: var(--spacing-md);
+
+  .tr {
+    margin-bottom: var(--spacing-lg);
     border-radius: var(--border-radius-md);
     border: 1px solid var(--color-border);
+    overflow: hidden; /* Garante que o border-radius seja respeitado */
   }
-  .table .td {
+
+  .td {
+    /* Alinha o conteúdo à direita para dar espaço ao rótulo */
     text-align: right;
     padding-left: 50%;
     position: relative;
-    white-space: normal;
+    border-bottom: 1px solid var(--color-border); /* Adiciona divisórias entre os "campos" */
   }
-  .table .td::before {
+
+  .tr .td:last-child {
+      border-bottom: none;
+  }
+
+  /* Cria o rótulo da coluna (ex: "Cliente:") antes do dado */
+  .td::before {
     content: attr(data-label);
     position: absolute;
     left: var(--spacing-md);
@@ -99,6 +118,7 @@
     text-align: left;
     font-weight: bold;
     color: var(--color-text-secondary);
+    text-transform: uppercase;
+    font-size: var(--font-size-sm);
   }
 }
-*/

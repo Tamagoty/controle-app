@@ -74,7 +74,6 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
             
             <SidebarSection title="Catálogos" sectionKey="catalogos" openSection={openSection} setOpenSection={setOpenSection}>
                 <NavItem to="/produtos" onClick={handleLinkClick}>Produtos</NavItem>
-                {/* CORREÇÃO: O componente NavItem não estava fechado corretamente aqui. */}
                 <NavItem to="/pessoas" onClick={handleLinkClick}>Pessoas</NavItem>
             </SidebarSection>
 
@@ -82,6 +81,10 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
                 <NavItem to="/relatorios/financeiro" onClick={handleLinkClick}>Financeiro</NavItem>
             </SidebarSection>
             
+            <SidebarSection title="Configurações" sectionKey="configuracoes" openSection={openSection} setOpenSection={setOpenSection}>
+                <NavItem to="/configuracoes/meu-perfil" onClick={handleLinkClick}>Meu Perfil</NavItem>
+            </SidebarSection>
+
             {role === 'admin' && (
               <SidebarSection title="Administração" sectionKey="admin" openSection={openSection} setOpenSection={setOpenSection}>
                 <NavItem to="/admin/users" onClick={handleLinkClick}>Utilizadores</NavItem>

@@ -1,12 +1,12 @@
 // src/App.jsx
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Layout from './components/Layout/Layout';
-import ProtectedRoute from './components/ProtectedRoute'; // <-- Importa a rota protegida
-import Login from './pages/Login'; // <-- Importa a página de Login
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Vendas from './pages/Vendas';
 import Compras from './pages/Compras';
@@ -21,6 +21,7 @@ import RelatorioFinanceiro from './pages/Relatorios/RelatorioFinanceiro';
 import Socios from './pages/Capital/Socios';
 import TransacoesSocios from './pages/Capital/TransacoesSocios';
 import UserManagement from './pages/Admin/UserManagement';
+import MeuPerfil from './pages/Configuracoes/MeuPerfil'; // <-- Importa a nova página
 
 function App() {
   return (
@@ -28,10 +29,8 @@ function App() {
       <Toaster position="top-right" toastOptions={{ /* ... */ }}/>
       
       <Routes>
-        {/* Rota pública para o Login */}
         <Route path="/login" element={<Login />} />
 
-        {/* Rotas protegidas que requerem autenticação */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
@@ -47,6 +46,7 @@ function App() {
             <Route path="relatorios/financeiro" element={<RelatorioFinanceiro />} />
             <Route path="capital/socios" element={<Socios />} />
             <Route path="capital/transacoes" element={<TransacoesSocios />} />
+            <Route path="configuracoes/meu-perfil" element={<MeuPerfil />} /> {/* <-- Nova rota */}
             <Route path="admin/users" element={<UserManagement />} />
           </Route>
         </Route>

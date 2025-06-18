@@ -10,28 +10,21 @@ import Modal from '../components/Modal/Modal';
 import PurchaseForm from '../components/PurchaseForm/PurchaseForm';
 import PurchasePaymentForm from '../components/PurchasePaymentForm/PurchasePaymentForm';
 import ProgressBar from '../components/ProgressBar/ProgressBar';
-import Pagination from '../components/Pagination/Pagination'; // 1. Importa o novo componente de Paginação
+import Pagination from '../components/Pagination/Pagination';
 import { useNotify } from '../hooks/useNotify';
 
-// 2. Define uma constante para o número de itens por página.
-//    Isto facilita a alteração deste valor no futuro.
 const ITEMS_PER_PAGE = 10;
 
 const Compras = () => {
-  // --- ESTADOS DO COMPONENTE ---
-  const [purchases, setPurchases] = useState([]); // Guarda a lista COMPLETA de compras vinda do Supabase.
+  const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: 'purchase_date', direction: 'descending' });
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const notify = useNotify();
-  
-  // 3. Novo estado para controlar qual é a página atual.
   const [currentPage, setCurrentPage] = useState(1);
 
-
-  // --- LÓGICA DE DADOS ---
   const fetchPurchases = useCallback(async () => {
     try {
       setLoading(true);
@@ -43,13 +36,15 @@ const Compras = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+    // CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
+    // O useCallback agora garante que a função não seja recriada desnecessariamente.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
   useEffect(() => {
     fetchPurchases();
   }, [fetchPurchases]);
 
-  // Lógica de ordenação (já implementada)
   const sortedPurchases = useMemo(() => {
     let sortableItems = [...purchases];
     if (sortConfig !== null) {
@@ -62,24 +57,19 @@ const Compras = () => {
     return sortableItems;
   }, [purchases, sortConfig]);
 
-  // 4. Lógica de Paginação.
-  //    Usa-se o 'useMemo' para que o cálculo só seja refeito se a página ou a lista de compras mudar.
   const currentTableData = useMemo(() => {
     const firstPageIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const lastPageIndex = firstPageIndex + ITEMS_PER_PAGE;
-    // 'slice' corta o array completo, devolvendo apenas os itens para a página atual.
     return sortedPurchases.slice(firstPageIndex, lastPageIndex);
   }, [currentPage, sortedPurchases]);
 
-
-  // --- MANIPULADORES DE EVENTOS ---
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     }
     setSortConfig({ key, direction });
-    setCurrentPage(1); // Volta para a primeira página ao reordenar
+    setCurrentPage(1);
   };
 
   const handleSuccess = () => {
@@ -93,11 +83,10 @@ const Compras = () => {
     setIsPaymentModalOpen(true);
   };
 
-  // --- CONFIGURAÇÃO DA TABELA ---
   const columns = [
     {
       header: 'Fornecedor / C. Custo',
-      key: 'supplier_name', // A 'key' é usada pela lógica de ordenação
+      key: 'supplier_name',
       sortable: true,
       Cell: ({ row }) => (
         <div>
@@ -136,7 +125,6 @@ const Compras = () => {
     },
   ];
 
-  // --- RENDERIZAÇÃO DO COMPONENTE ---
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
@@ -148,19 +136,16 @@ const Compras = () => {
         {loading ? (
           <p>A carregar compras...</p>
         ) : (
-          // 5. O Card agora envolve a Tabela e a Paginação
           <>
             <Table 
               columns={columns} 
-              data={currentTableData} // Passa para a tabela apenas os dados da página atual
+              data={currentTableData}
               onSort={requestSort}
               sortConfig={sortConfig}
             />
             <Pagination 
               currentPage={currentPage}
-              // Calcula o número total de páginas
               totalPages={Math.ceil(sortedPurchases.length / ITEMS_PER_PAGE)}
-              // A função que será chamada quando o utilizador clicar nos botões da paginação
               onPageChange={page => setCurrentPage(page)}
             />
           </>

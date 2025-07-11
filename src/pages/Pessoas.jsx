@@ -77,6 +77,7 @@ const Pessoas = () => {
       await supabase.from('entities').update({ is_active: newStatus }).eq('id', entityId);
       setEntities(current => current.map(entity => entity.id === entityId ? { ...entity, is_active: newStatus } : entity));
       notify.success('Status atualizado com sucesso!');
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       notify.error('Falha ao atualizar o status.');
     }

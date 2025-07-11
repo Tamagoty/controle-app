@@ -50,6 +50,7 @@ const TransacoesSocios = () => {
             await supabase.from('partner_transactions').delete().eq('id', id);
             notify.success('Transação apagada.');
             fetchTransactions();
+        // eslint-disable-next-line no-unused-vars
         } catch (error) {
             notify.error('Falha ao apagar.');
         }

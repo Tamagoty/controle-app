@@ -22,8 +22,12 @@ import Socios from './pages/Capital/Socios';
 import TransacoesSocios from './pages/Capital/TransacoesSocios';
 import UserManagement from './pages/Admin/UserManagement';
 import MeuPerfil from './pages/Configuracoes/MeuPerfil'; // <-- Importa a nova página
+import ThemeSettings from './pages/Configuracoes/ThemeSettings'; // <-- Importa a nova página
+import { useAppBranding } from './hooks/useAppBranding';
 
 function App() {
+  useAppBranding();
+
   return (
     <>
       <Toaster position="top-right" toastOptions={{ /* ... */ }}/>
@@ -47,6 +51,7 @@ function App() {
             <Route path="capital/socios" element={<Socios />} />
             <Route path="capital/transacoes" element={<TransacoesSocios />} />
             <Route path="configuracoes/meu-perfil" element={<MeuPerfil />} /> {/* <-- Nova rota */}
+            <Route path="configuracoes/tema" element={<ThemeSettings />} /> {/* <-- Nova rota */}
             <Route path="admin/users" element={<UserManagement />} />
           </Route>
         </Route>

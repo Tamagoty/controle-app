@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useAppBranding } from '../../hooks/useAppBranding';
 import { FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
 import styles from './Sidebar.module.css';
 import Button from '../Button/Button';
@@ -38,7 +39,8 @@ const NavItem = ({ to, children, onClick }) => (
 
 const Sidebar = ({ isOpen, onLinkClick }) => {
   const { signOut, role } = useAuth();
-  const [openSection, setOpenSection] = useState('operacional'); // Começa com uma seção aberta
+  const { appName, logoUrl } = useAppBranding();
+  const [openSection, setOpenSection] = useState('operacional');
   const sidebarClasses = `${styles.sidebar} ${isOpen ? styles.open : ''}`;
   const handleLinkClick = () => { if (window.innerWidth <= 768) onLinkClick(); };
 
@@ -46,7 +48,11 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
     <aside className={sidebarClasses}>
       <div>
         <div className={styles.logoContainer}>
-          <h2 className={styles.logo}>Controle App</h2>
+          {/* O logo e o nome agora estão dentro de um NavLink que aponta para a página inicial */}
+          <NavLink to="/" className={styles.logoLink} onClick={handleLinkClick}>
+            {logoUrl && <img src={logoUrl} alt="Logo do Aplicativo" className={styles.logoImage} />}
+            <h2 className={styles.logo} title={appName}>{appName}</h2>
+          </NavLink>
         </div>
         <nav className={styles.nav}>
           <ul className={styles.navList}>

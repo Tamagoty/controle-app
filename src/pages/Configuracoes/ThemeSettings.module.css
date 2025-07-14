@@ -1,0 +1,53 @@
+/* src/pages/Configuracoes/ThemeSettings.module.css */
+
+.themeGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.colorPickerGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.colorPickerGroup label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.colorInput {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 40px;
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+}
+
+/* Estiliza o seletor de cor para o Chrome/Edge/etc. */
+.colorInput::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+.colorInput::-webkit-color-swatch {
+    border: none;
+    border-radius: var(--border-radius-md);
+}
+
+/* Estiliza o seletor de cor para o Firefox */
+.colorInput::-moz-color-swatch {
+    border: none;
+    border-radius: var(--border-radius-md);
+}
+
+.actions {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: flex-end;
+}

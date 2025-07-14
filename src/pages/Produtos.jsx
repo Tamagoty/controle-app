@@ -19,16 +19,16 @@ const ITEMS_PER_PAGE = 10;
 
 const Produtos = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortConfig, setSortConfig] = useState({
-    key: "name",
-    direction: "ascending",
-  });
+  const [sortConfig, setSortConfig] = useState({ key: "name", direction: "ascending" });
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [adjustingStockProduct, setAdjustingStockProduct] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const notify = useNotify();
   const { role } = useAuth();
 
@@ -41,34 +41,43 @@ const Produtos = () => {
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error("Erro ao buscar produtos:", error);
       notify.error("Não foi possível carregar os produtos.");
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('product_categories').select('id, name');
+      setCategories(data || []);
+    };
+    
     fetchProducts();
+    fetchCategories();
   }, [fetchProducts]);
 
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .filter(product => 
+        selectedCategory ? product.category_id === parseInt(selectedCategory) : true
+      );
+  }, [products, searchTerm, selectedCategory]);
+
   const sortedProducts = useMemo(() => {
-    let sortableItems = [...products];
+    let sortableItems = [...filteredProducts];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] === null) return 1;
-        if (b[sortConfig.key] === null) return -1;
-        
-        if (a[sortConfig.key] < b[sortConfig.key])
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        if (a[sortConfig.key] > b[sortConfig.key])
-          return sortConfig.direction === "ascending" ? 1 : -1;
+        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === "ascending" ? -1 : 1;
+        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === "ascending" ? 1 : -1;
         return 0;
       });
     }
     return sortableItems;
-  }, [products, sortConfig]);
+  }, [filteredProducts, sortConfig]);
 
   const currentTableData = useMemo(() => {
     const firstPageIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -87,17 +96,10 @@ const Produtos = () => {
 
   const handleStatusChange = async (productId, newStatus) => {
     try {
-      await supabase
-        .from("products")
-        .update({ is_active: newStatus })
-        .eq("id", productId);
-      setProducts((current) =>
-        current.map((p) =>
-          p.id === productId ? { ...p, is_active: newStatus } : p
-        )
-      );
+      await supabase.from("products").update({ is_active: newStatus }).eq("id", productId);
+      setProducts((current) => current.map((p) => (p.id === productId ? { ...p, is_active: newStatus } : p)));
       notify.success("Status atualizado!");
-    } catch {
+    } catch (error) {
       notify.error("Falha ao atualizar o status.");
     }
   };
@@ -124,11 +126,7 @@ const Produtos = () => {
     handleCloseModals();
   };
 
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value || 0);
+  const formatCurrency = (value) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0);
 
   const columns = [
     { header: "Produto", key: "name", sortable: true, Cell: ({ row }) => ( <div> <strong>{row.name}</strong> <div className={styles.subtext}> {row.category_name || "Sem categoria"} </div> </div> ), },
@@ -140,10 +138,30 @@ const Produtos = () => {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--spacing-lg)", }}>
+      <div className={styles.header}>
         <h1>Produtos</h1>
         {canManage && ( <Button icon={FaPlus} onClick={() => openFormModal()}> Novo Produto </Button> )}
       </div>
+
+      <Card className={styles.filterCard}>
+        <input
+          type="text"
+          placeholder="Buscar por nome..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={styles.searchInput}
+        />
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className={styles.selectInput}
+        >
+          <option value="">Todas as Categorias</option>
+          {categories.map(cat => (
+            <option key={cat.id} value={cat.id}>{cat.name}</option>
+          ))}
+        </select>
+      </Card>
 
       <Card>
         {loading ? ( <p>A carregar produtos...</p> ) : (

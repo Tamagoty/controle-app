@@ -22,6 +22,7 @@ const Pessoas = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEntity, setEditingEntity] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
   const notify = useNotify();
 
   const fetchEntities = useCallback(async () => {
@@ -41,8 +42,18 @@ const Pessoas = () => {
     fetchEntities();
   }, [fetchEntities]);
 
+  const filteredEntities = useMemo(() => {
+    if (!searchTerm) {
+      return entities;
+    }
+    return entities.filter(entity =>
+      entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (entity.phone && entity.phone.includes(searchTerm))
+    );
+  }, [entities, searchTerm]);
+
   const sortedEntities = useMemo(() => {
-    let sortableItems = [...entities];
+    let sortableItems = [...filteredEntities];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         if (a[sortConfig.key] === null) return 1;
@@ -55,7 +66,7 @@ const Pessoas = () => {
       });
     }
     return sortableItems;
-  }, [entities, sortConfig]);
+  }, [filteredEntities, sortConfig]);
 
   const currentTableData = useMemo(() => {
     const firstPageIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -77,7 +88,6 @@ const Pessoas = () => {
       await supabase.from('entities').update({ is_active: newStatus }).eq('id', entityId);
       setEntities(current => current.map(entity => entity.id === entityId ? { ...entity, is_active: newStatus } : entity));
       notify.success('Status atualizado com sucesso!');
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       notify.error('Falha ao atualizar o status.');
     }
@@ -108,11 +118,21 @@ const Pessoas = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+      <div className={styles.header}>
         <h1>Pessoas & Empresas</h1>
         <Button icon={FaPlus} onClick={() => handleOpenModal()}>Nova Pessoa/Empresa</Button>
       </div>
       
+      <Card className={styles.filterCard}>
+        <input
+          type="text"
+          placeholder="Buscar por nome ou telefone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={styles.searchInput}
+        />
+      </Card>
+
       <Card>
         {loading ? <p>A carregar...</p> : (
           <>

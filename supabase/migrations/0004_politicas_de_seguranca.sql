@@ -28,7 +28,7 @@ DROP POLICY IF EXISTS "Allow update for managers and admins" ON public.entities;
 DROP POLICY IF EXISTS "Allow delete for managers and admins" ON public.entities;
 CREATE POLICY "Allow read for authenticated users" ON public.entities FOR SELECT USING (true);
 CREATE POLICY "Allow insert for managers and admins" ON public.entities FOR INSERT WITH CHECK (get_my_role() IN ('admin', 'gestor'));
-CREATE POLICY "Allow update for managers and admins" ON public.entities FOR UPDATE USING (get_my_role() IN ('admin', 'gestor')) WITH CHECK (get_my_role() IN ('admin', 'gestor'));
+CREATE POLICY "Allow update for managers and admins" ON public.entities FOR UPDATE USING (get_my_role() IN ('admin', 'gestor'));
 CREATE POLICY "Allow delete for managers and admins" ON public.entities FOR DELETE USING (get_my_role() IN ('admin', 'gestor'));
 
 -- Tabela: entity_roles

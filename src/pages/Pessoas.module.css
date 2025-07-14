@@ -1,5 +1,28 @@
 /* src/pages/Pessoas.module.css */
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Novo: Estilos para o card de filtros */
+.filterCard {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md) !important;
+}
+
+.searchInput {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+}
+
 .statusCell {
   display: flex;
   align-items: center;
@@ -22,7 +45,6 @@
   background-color: var(--color-danger);
 }
 
-/* Novos estilos para a célula do nome da entidade */
 .entityNameCell {
   display: flex;
   align-items: center;
@@ -32,7 +54,7 @@
 .entityIcon {
   font-size: 1.8rem;
   color: var(--color-text-secondary);
-  flex-shrink: 0; /* Previne que o ícone encolha */
+  flex-shrink: 0;
 }
 
 .entityInfo {
@@ -46,12 +68,11 @@
   color: var(--color-text-secondary);
 }
 
-/* Novos estilos para a célula de papéis */
 .rolesCell {
   display: flex;
-  flex-wrap: wrap; /* Permite que os 'tags' quebrem para a linha seguinte */
+  flex-wrap: wrap;
   gap: var(--spacing-xs);
-  max-width: 250px; /* Limita a largura máxima da célula */
+  max-width: 250px;
 }
 
 .roleTag {
@@ -61,5 +82,5 @@
   border-radius: var(--border-radius-sm);
   font-size: 0.8rem;
   font-weight: 500;
-  white-space: nowrap; /* Garante que o texto dentro do tag não quebre */
+  white-space: nowrap;
 }

@@ -1,13 +1,55 @@
 /* src/pages/Produtos.module.css */
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.filterCard {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md) !important;
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.searchInput, .selectInput {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+}
+
+.searchInput {
+  flex-grow: 1; /* Faz o campo de busca ocupar mais espaço */
+}
+
 .subtext {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
 .descriptionCell {
-  white-space: normal; /* Permite a quebra de linha */
-  max-width: 300px; /* Limita a largura para forçar a quebra */
+  white-space: normal;
+  max-width: 300px;
   line-height: 1.4;
   font-size: var(--font-size-sm);
+}
+
+.stockCell {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.stockEmpty {
+    color: var(--color-danger);
+}
+
+.actionsCell {
+    display: flex;
+    gap: var(--spacing-sm);
 }

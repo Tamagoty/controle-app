@@ -89,6 +89,8 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
             
             <SidebarSection title="Configurações" sectionKey="configuracoes" openSection={openSection} setOpenSection={setOpenSection}>
                 <NavItem to="/configuracoes/meu-perfil" onClick={handleLinkClick}>Meu Perfil</NavItem>
+                {/* CORREÇÃO: Adicionado o link para a página de personalização de tema */}
+                <NavItem to="/configuracoes/tema" onClick={handleLinkClick}>Aparência</NavItem>
             </SidebarSection>
 
             {role === 'admin' && (

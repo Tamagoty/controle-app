@@ -1,0 +1,77 @@
+/* src/pages/Relatorios/RelatorioDetalhado.module.css */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.filterContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) !important;
+}
+
+.filterContainer input, .filterContainer select {
+    padding: var(--spacing-sm);
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-primary);
+}
+
+.reportContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.costCenterCard {
+    padding: var(--spacing-lg);
+}
+
+.costCenterTitle {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.costCenterGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+.transactionsSection h4 {
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text-secondary);
+}
+
+.transactionList {
+    list-style: none;
+    padding: 0;
+    margin-bottom: var(--spacing-lg);
+}
+
+.transactionList li {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--color-bg-tertiary);
+}
+
+.chartSection h4 {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+@media (max-width: 900px) {
+    .costCenterGrid {
+        grid-template-columns: 1fr;
+    }
+}

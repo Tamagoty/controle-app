@@ -25,6 +25,7 @@ import MeuPerfil from './pages/Configuracoes/MeuPerfil';
 import ThemeSettings from './pages/Configuracoes/ThemeSettings';
 import RelatorioDetalhado from './pages/Relatorios/RelatorioDetalhado';
 import RelatorioProdutos from './pages/Relatorios/RelatorioProdutos';
+import RelatorioClientes from './pages/Relatorios/RelatorioClientes';
 import { useAppBranding } from './hooks/useAppBranding';
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
             <Route path="capital/transacoes" element={<TransacoesSocios />} />
             <Route path="configuracoes/meu-perfil" element={<MeuPerfil />} /> {/* <-- Nova rota */}
             <Route path="configuracoes/tema" element={<ThemeSettings />} /> {/* <-- Nova rota */}
+            <Route path="relatorios/clientes" element={<RelatorioClientes />} />
             <Route path="admin/users" element={<UserManagement />} />
           </Route>
         </Route>

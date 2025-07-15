@@ -86,6 +86,7 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
              <SidebarSection title="Relatórios" sectionKey="relatorios" openSection={openSection} setOpenSection={setOpenSection}>
                 <NavItem to="/relatorios/financeiro" onClick={handleLinkClick}>Financeiro</NavItem>
                 <NavItem to="/relatorios/detalhado" onClick={handleLinkClick}>Detalhado</NavItem>
+                <NavItem to="/relatorios/produtos" onClick={handleLinkClick}>Por Produto</NavItem>
             </SidebarSection>
             
             <SidebarSection title="Configurações" sectionKey="configuracoes" openSection={openSection} setOpenSection={setOpenSection}>

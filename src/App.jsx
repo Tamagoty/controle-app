@@ -21,9 +21,10 @@ import RelatorioFinanceiro from './pages/Relatorios/RelatorioFinanceiro';
 import Socios from './pages/Capital/Socios';
 import TransacoesSocios from './pages/Capital/TransacoesSocios';
 import UserManagement from './pages/Admin/UserManagement';
-import MeuPerfil from './pages/Configuracoes/MeuPerfil'; // <-- Importa a nova página
-import ThemeSettings from './pages/Configuracoes/ThemeSettings'; // <-- Importa a nova página
+import MeuPerfil from './pages/Configuracoes/MeuPerfil';
+import ThemeSettings from './pages/Configuracoes/ThemeSettings';
 import RelatorioDetalhado from './pages/Relatorios/RelatorioDetalhado';
+import RelatorioProdutos from './pages/Relatorios/RelatorioProdutos';
 import { useAppBranding } from './hooks/useAppBranding';
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
             <Route path="financeiro/contas-a-pagar" element={<ContasAPagar />} />
             <Route path="relatorios/financeiro" element={<RelatorioFinanceiro />} />
             <Route path="relatorios/detalhado" element={<RelatorioDetalhado />} /> {/* <-- Nova rota */}
+            <Route path="relatorios/produtos" element={<RelatorioProdutos />} />
             <Route path="capital/socios" element={<Socios />} />
             <Route path="capital/transacoes" element={<TransacoesSocios />} />
             <Route path="configuracoes/meu-perfil" element={<MeuPerfil />} /> {/* <-- Nova rota */}

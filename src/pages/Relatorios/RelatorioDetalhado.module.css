@@ -31,38 +31,96 @@
 }
 
 .costCenterCard {
+    padding: 0;
+    overflow: hidden;
+}
+
+.costCenterHeader {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: var(--spacing-lg);
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    text-align: left;
+}
+
+.costCenterHeader:hover {
+    background-color: var(--color-bg-tertiary);
 }
 
 .costCenterTitle {
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--color-border);
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--color-text-primary);
+}
+
+.chevron {
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    transition: transform 0.3s ease;
+}
+
+.chevron.open {
+    transform: rotate(180deg);
+}
+
+.collapsibleContent {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+}
+
+.collapsibleContent.open {
+    max-height: 3000px; /* Um valor alto para permitir que o conteúdo se expanda */
 }
 
 .costCenterGrid {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
 }
 
-.transactionsSection h4 {
-    margin-top: var(--spacing-md);
+/* NOVO: Estilos para as sub-seções retráteis */
+.subSection {
+    margin-bottom: var(--spacing-lg);
+}
+
+.subSectionHeader {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
     margin-bottom: var(--spacing-sm);
+    border: none;
+    background: none;
     color: var(--color-text-secondary);
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.subSectionHeader span {
+    color: var(--color-text-primary);
 }
 
 .transactionList {
     list-style: none;
     padding: 0;
-    margin-bottom: var(--spacing-lg);
+    margin: 0;
 }
 
 .transactionList li {
     display: flex;
     justify-content: space-between;
-    padding: var(--spacing-xs) 0;
+    padding: var(--spacing-xs) var(--spacing-sm);
     border-bottom: 1px solid var(--color-bg-tertiary);
+    font-size: 0.9rem;
 }
 
 .chartSection h4 {

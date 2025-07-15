@@ -1,0 +1,104 @@
+/* src/components/ProductReportCard/ProductReportCard.module.css */
+
+.card {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.header {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2fr 3fr auto;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+}
+
+.header:hover {
+  background-color: var(--color-bg-tertiary);
+}
+
+.productName {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.summary {
+  display: flex;
+  justify-content: space-around;
+  gap: var(--spacing-lg);
+  color: var(--color-text-secondary);
+}
+
+.summary strong {
+  color: var(--color-text-primary);
+}
+
+.chevron {
+  transition: transform 0.3s ease;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
+  padding: 0 var(--spacing-lg);
+}
+
+.content.open {
+  max-height: 500px;
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+.chartContainer, .salesList {
+  width: 100%;
+}
+
+.salesList h4, .chartContainer h4 {
+    margin-bottom: var(--spacing-md);
+}
+
+.salesList ul {
+    list-style: none;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.salesList li {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-xs) 0;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .header {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+    .summary {
+        justify-content: flex-start;
+    }
+    .detailsGrid {
+        grid-template-columns: 1fr;
+    }
+}

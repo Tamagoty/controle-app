@@ -34,13 +34,18 @@ const ProductReportCard = ({ productSummary, dates }) => {
     fetchDetails();
   }, [isOpen, productSummary.product_id, dates, details.sales_history.length]);
 
+  // CORREÇÃO: A lógica de agrupamento agora também calcula o total para cada cliente.
   const groupedSales = useMemo(() => {
     return details.sales_history.reduce((acc, sale) => {
       const client = sale.client_name;
       if (!acc[client]) {
-        acc[client] = [];
+        acc[client] = {
+          sales: [],
+          total: 0,
+        };
       }
-      acc[client].push(sale);
+      acc[client].sales.push(sale);
+      acc[client].total += sale.total_price;
       return acc;
     }, {});
   }, [details.sales_history]);
@@ -84,17 +89,19 @@ const ProductReportCard = ({ productSummary, dates }) => {
             <div className={styles.salesList}>
               <h4>Vendas por Cliente</h4>
               <ul>
-                {Object.entries(groupedSales).map(([clientName, sales]) => {
+                {Object.entries(groupedSales).map(([clientName, clientData]) => {
                     const isClientOpen = openClients.includes(clientName);
                     return (
                         <li key={clientName}>
                             <button className={styles.clientHeader} onClick={() => toggleClient(clientName)}>
-                                <span>{clientName}</span>
+                                {/* Exibe o nome do cliente e o total de compras dele */}
+                                <span>{clientName} ({formatCurrency(clientData.total)})</span>
                                 <FaChevronDown className={`${styles.chevron} ${isClientOpen ? styles.open : ''}`} />
                             </button>
+                            {/* A lista de vendas individuais agora fica dentro da secção retrátil */}
                             <div className={`${styles.clientSales} ${isClientOpen ? styles.open : ''}`}>
                                 <ul>
-                                    {sales.map(sale => (
+                                    {clientData.sales.map(sale => (
                                         <li key={sale.sale_id} className={styles.saleDetail}>
                                             <span>{new Date(sale.sale_date).toLocaleDateString()}</span>
                                             <span>{formatCurrency(sale.total_price)}</span>

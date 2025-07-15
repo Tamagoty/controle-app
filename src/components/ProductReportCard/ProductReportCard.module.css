@@ -79,15 +79,47 @@
 .salesList ul {
     list-style: none;
     padding: 0;
-    max-height: 200px;
+    max-height: 250px;
     overflow-y: auto;
 }
 
-.salesList li {
+.salesList > ul > li {
+    border-bottom: 1px solid var(--color-border);
+}
+.salesList > ul > li:last-child {
+    border-bottom: none;
+}
+
+.clientHeader {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    font-weight: bold;
+    background: none;
+    border: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.clientSales {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+    padding-left: var(--spacing-md);
+}
+
+.clientSales.open {
+    max-height: 300px;
+}
+
+.saleDetail {
     display: flex;
     justify-content: space-between;
     padding: var(--spacing-xs) 0;
     font-size: 0.9rem;
+    color: var(--color-text-secondary);
 }
 
 @media (max-width: 768px) {

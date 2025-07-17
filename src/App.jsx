@@ -26,6 +26,8 @@ import ThemeSettings from './pages/Configuracoes/ThemeSettings';
 import RelatorioDetalhado from './pages/Relatorios/RelatorioDetalhado';
 import RelatorioProdutos from './pages/Relatorios/RelatorioProdutos';
 import RelatorioClientes from './pages/Relatorios/RelatorioClientes';
+import ProductCategories from './pages/Catalogos/ProductCategories';
+import ExpenseCategories from './pages/Financeiro/ExpenseCategories';
 import { useAppBranding } from './hooks/useAppBranding';
 
 function App() {
@@ -57,6 +59,8 @@ function App() {
             <Route path="capital/transacoes" element={<TransacoesSocios />} />
             <Route path="configuracoes/meu-perfil" element={<MeuPerfil />} /> {/* <-- Nova rota */}
             <Route path="configuracoes/tema" element={<ThemeSettings />} /> {/* <-- Nova rota */}
+            <Route path="catalogos/categorias-de-produto" element={<ProductCategories />} /> {/* <-- Nova rota */}
+            <Route path="financeiro/categorias-de-despesa" element={<ExpenseCategories />} /> {/* <-- Nova rota */}
             <Route path="relatorios/clientes" element={<RelatorioClientes />} />
             <Route path="admin/users" element={<UserManagement />} />
           </Route>

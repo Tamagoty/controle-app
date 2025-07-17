@@ -69,6 +69,7 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
                 <NavItem to="/financeiro/contas-a-receber" onClick={handleLinkClick}>Contas a Receber</NavItem>
                 <NavItem to="/financeiro/contas-a-pagar" onClick={handleLinkClick}>Contas a Pagar</NavItem>
                 <NavItem to="/financeiro/despesas" onClick={handleLinkClick}>Despesas</NavItem>
+                <NavItem to="/financeiro/categorias-de-despesa" onClick={handleLinkClick}>Categorias de Despesa</NavItem>
                 <NavItem to="/financeiro/comissoes" onClick={handleLinkClick}>Comissões</NavItem>
                 <NavItem to="/financeiro/centros-de-custo" onClick={handleLinkClick}>Centros de Custo</NavItem>
             </SidebarSection>
@@ -80,6 +81,7 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
             
             <SidebarSection title="Catálogos" sectionKey="catalogos" openSection={openSection} setOpenSection={setOpenSection}>
                 <NavItem to="/produtos" onClick={handleLinkClick}>Produtos</NavItem>
+                <NavItem to="/catalogos/categorias-de-produto" onClick={handleLinkClick}>Categorias de Produto</NavItem>
                 <NavItem to="/pessoas" onClick={handleLinkClick}>Pessoas</NavItem>
             </SidebarSection>
 

@@ -24,7 +24,6 @@ export const useProdutos = () => {
       setProducts(data || []);
     } catch (err) {
       setError(err.message);
-      // CORREÇÃO: Utiliza a mensagem de erro da variável 'err'.
       notify.error(err.message || "Não foi possível carregar os produtos.");
     } finally {
       setLoading(false);
@@ -37,7 +36,6 @@ export const useProdutos = () => {
         if (catError) throw catError;
         setCategories(data || []);
     } catch (err) {
-        // CORREÇÃO: Utiliza a mensagem de erro da variável 'err'.
         notify.error(err.message || "Não foi possível carregar as categorias de produtos.");
     }
   }, [notify]);

@@ -72,11 +72,10 @@ const Pessoas = () => {
   const handleStatusChange = async (entityId, newStatus) => {
     try {
       await supabase.from('entities').update({ is_active: newStatus }).eq('id', entityId);
-      fetchEntities(); 
+      fetchEntities();
       notify.success('Status atualizado com sucesso!');
-    } catch (err) {
-      // CORREÇÃO: Utiliza a mensagem de erro da variável 'err'.
-      notify.error(err.message || 'Falha ao atualizar o status.');
+    } catch (error) {
+      notify.error(error.message || 'Falha ao atualizar o status.');
     }
   };
 

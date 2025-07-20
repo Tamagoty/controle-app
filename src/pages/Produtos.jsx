@@ -76,11 +76,10 @@ const Produtos = () => {
   const handleStatusChange = async (productId, newStatus) => {
     try {
       await supabase.from("products").update({ is_active: newStatus }).eq("id", productId);
-      fetchProducts(); // Recarrega os dados para refletir a mudança
+      fetchProducts();
       notify.success("Status atualizado!");
-    } catch (err) {
-      // CORREÇÃO: Utiliza a mensagem de erro da variável 'err'.
-      notify.error(err.message || "Falha ao atualizar o status.");
+    } catch (error) {
+      notify.error(error.message || "Falha ao atualizar o status.");
     }
   };
 

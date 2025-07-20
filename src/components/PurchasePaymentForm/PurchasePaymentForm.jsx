@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import Button from '../Button/Button';
-import Modal from '../Modal/Modal'; // Importar o Modal
+import Modal from '../Modal/Modal';
+import FileUploader from '../FileUploader/FileUploader';
 import styles from './PurchasePaymentForm.module.css';
 import { FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 
@@ -16,11 +17,12 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [editingAmount, setEditingAmount] = useState('');
   
-  // --- NOVOS ESTADOS PARA O MODAL DE CONFIRMAÇÃO ---
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState(null);
 
   const notify = useNotify();
+
+  const handleFocus = (event) => event.target.select();
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -34,7 +36,7 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
         
         if (error) throw error;
         setPayments(data || []);
-      } catch (err) { // CORREÇÃO: Usamos 'err' para evitar o aviso de variável não utilizada.
+      } catch (err) {
         notify.error(err.message || "Não foi possível carregar os pagamentos existentes.");
       } finally {
         setListLoading(false);
@@ -71,7 +73,6 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
     }
   };
 
-  // --- LÓGICA DE EXCLUSÃO ATUALIZADA ---
   const handleDeletePayment = (paymentId) => {
     setPaymentToDelete(paymentId);
     setIsConfirmModalOpen(true);
@@ -138,7 +139,7 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
         </div>
         <div className={styles.formGroup}>
           <label htmlFor="amount">Valor a Pagar</label>
-          <input id="amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required className={styles.input} />
+          <input id="amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} onFocus={handleFocus} required className={styles.input} />
         </div>
         <div className={styles.formActions}>
           <Button type="submit" disabled={loading || purchase.balance <= 0}>
@@ -155,7 +156,7 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
               <li key={p.id} className={editingPaymentId === p.id ? styles.editingItem : ''}>
                 {editingPaymentId === p.id ? (
                   <>
-                    <input type="number" value={editingAmount} onChange={(e) => setEditingAmount(e.target.value)} className={styles.editInput} autoFocus/>
+                    <input type="number" value={editingAmount} onChange={(e) => setEditingAmount(e.target.value)} onFocus={handleFocus} className={styles.editInput} autoFocus/>
                     <div className={styles.paymentActions}>
                       <Button icon={FaCheck} variant="success" isIconOnly onClick={handleUpdatePayment}>Guardar</Button>
                       <Button icon={FaTimes} variant="ghost" isIconOnly onClick={handleCancelEdit}>Cancelar</Button>
@@ -181,7 +182,8 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
         )}
       </div>
 
-      {/* --- NOVO MODAL DE CONFIRMAÇÃO --- */}
+      <FileUploader key={purchase.id} recordId={purchase.id} recordType="purchase" />
+
       <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Confirmar Exclusão">
         <div>
           <p>Tem a certeza que quer apagar este pagamento? Esta ação não pode ser desfeita.</p>

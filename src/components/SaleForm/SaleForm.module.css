@@ -1,5 +1,4 @@
 /* src/components/SaleForm/SaleForm.module.css */
-/* Este ficheiro é muito semelhante ao do PurchaseForm, demonstrando a reutilização de estilos */
 
 .form {
   display: flex;
@@ -22,6 +21,17 @@
 .formGroup label {
   font-weight: 500;
   color: var(--color-text-secondary);
+}
+
+.labelWithIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--color-primary) !important;
+}
+
+.labelWithIcon svg {
+  font-size: 0.8em;
 }
 
 .input,
@@ -52,15 +62,30 @@
 .itemsList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
 }
 
 .itemRow {
   display: grid;
-  grid-template-columns: 3fr 1fr 1fr auto;
+  grid-template-areas:
+      "product quantity"
+      "price button";
+  grid-template-columns: 3fr 1fr;
   gap: var(--spacing-md);
-  align-items: center;
+  align-items: end;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
 }
+
+.itemRow:last-child {
+    border-bottom: none;
+}
+
+.productGroup { grid-area: product; }
+.quantityGroup { grid-area: quantity; }
+.priceGroup { grid-area: price; }
+.itemRow > button { grid-area: button; }
+
 
 .footer {
   display: flex;
@@ -81,7 +106,16 @@
 }
 
 @media (max-width: 768px) {
-  .itemRow {
+  .headerFields {
     grid-template-columns: 1fr;
+  }
+  .itemRow {
+    grid-template-areas:
+        "product"
+        "quantity"
+        "price"
+        "button";
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }

@@ -2,99 +2,109 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { useAuth } from '../../context/AuthContext';
 import { useNotify } from '../../hooks/useNotify';
+import { useSessionDefaults } from '../../context/SessionDefaultsContext';
+import imageCompression from 'browser-image-compression';
 import styles from './PurchaseForm.module.css';
+import paymentStyles from '../PaymentSection.module.css';
 import Button from '../Button/Button';
+import ToggleSwitch from '../ToggleSwitch/ToggleSwitch';
+import { FaThumbtack } from 'react-icons/fa';
 
 const PurchaseForm = ({ onSuccess }) => {
+  const { sessionDefaults, updateDefault } = useSessionDefaults();
   const [supplierId, setSupplierId] = useState('');
-  const [costCenterId, setCostCenterId] = useState('');
+  const [costCenterId, setCostCenterId] = useState(sessionDefaults.costCenterId || '');
   const [items, setItems] = useState([{ product_id: '', quantity: 1, unit_price: '' }]);
   const [suppliers, setSuppliers] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const notify = useNotify();
+  const { user } = useAuth();
+
+  const [addPayment, setAddPayment] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [attachmentFile, setAttachmentFile] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: suppliersData, error: suppliersError } = await supabase
-        .from('entity_roles')
-        .select(`entity:entities (id, name)`)
-        .eq('role', 'Fornecedor');
-      if (suppliersError) console.error('Error fetching suppliers:', suppliersError);
-      else setSuppliers(suppliersData.map(s => s.entity));
-
-      const { data: costCentersData, error: costCentersError } = await supabase
-        .from('cost_centers').select('id, name');
-      if (costCentersError) console.error('Error fetching cost centers:', costCentersError);
-      else setCostCenters(costCentersData);
-      
-      const { data: productsData, error: productsError } = await supabase
-        .from('products').select('id, name, sale_price');
-      if (productsError) console.error('Error fetching products:', productsError);
-      else setProducts(productsData);
+      const { data: suppliersData } = await supabase.from('entity_roles').select(`entity:entities (id, name)`).eq('role', 'Fornecedor');
+      setSuppliers(suppliersData.map(s => s.entity));
+      const { data: costCentersData } = await supabase.from('cost_centers').select('id, name');
+      setCostCenters(costCentersData);
+      const { data: productsData } = await supabase.from('products').select('id, name, purchase_price');
+      setProducts(productsData);
     };
     fetchData();
   }, []);
 
   const totalAmount = useMemo(() => {
-    return items.reduce((total, item) => {
-      const itemTotal = (item.quantity || 0) * (item.unit_price || 0);
-      return total + itemTotal;
-    }, 0);
+    return items.reduce((total, item) => total + (Number(item.quantity) || 0) * (Number(item.unit_price) || 0), 0);
   }, [items]);
+
+  useEffect(() => {
+    if (addPayment) {
+        setPaymentAmount(totalAmount.toFixed(2));
+    } else {
+        setPaymentAmount('');
+    }
+  }, [addPayment, totalAmount]);
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
     const currentItem = newItems[index];
     currentItem[field] = value;
-
     if (field === 'product_id') {
       const selectedProduct = products.find(p => p.id === value);
       if (selectedProduct) {
-        currentItem.unit_price = selectedProduct.sale_price;
+        currentItem.unit_price = selectedProduct.purchase_price;
       }
     }
     setItems(newItems);
   };
 
-  const addItem = () => {
-    setItems([...items, { product_id: '', quantity: 1, unit_price: '' }]);
-  };
-
-  const removeItem = (index) => {
-    const newItems = items.filter((_, i) => i !== index);
-    setItems(newItems);
-  };
+  const addItem = () => setItems([...items, { product_id: '', quantity: 1, unit_price: '' }]);
+  const removeItem = (index) => setItems(items.filter((_, i) => i !== index));
+  const handleFileChange = (e) => setAttachmentFile(e.target.files[0]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    updateDefault('costCenterId', costCenterId);
 
-    // Prepara a lista de itens para ser enviada como JSON para a função
     const itemsPayload = items.map(item => ({
       product_id: item.product_id,
-      quantity: parseInt(item.quantity, 10),
+      quantity: parseFloat(item.quantity),
       unit_price: parseFloat(item.unit_price)
     }));
 
     try {
-      // Chama a função RPC que criamos no Supabase
-      const { data, error } = await supabase.rpc('create_purchase_with_items', {
+      const { data: purchaseData, error } = await supabase.rpc('create_purchase_with_details', {
         supplier_id_param: supplierId,
         cost_center_id_param: costCenterId,
-        items_param: itemsPayload
+        items_param: itemsPayload,
+        payment_amount_param: addPayment ? parseFloat(paymentAmount) : 0
       });
-
-      if (error) {
-        throw error;
+      if (error) throw error;
+      const newPurchaseId = purchaseData.id;
+      if (attachmentFile && newPurchaseId) {
+        let fileToUpload = attachmentFile;
+        if (attachmentFile.type.startsWith('image/')) {
+            const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true, initialQuality: 0.6 };
+            fileToUpload = await imageCompression(attachmentFile, options);
+        }
+        const filePath = `${user.id}/${newPurchaseId}/${Date.now()}_${fileToUpload.name}`;
+        await supabase.storage.from('attachments').upload(filePath, fileToUpload);
+        await supabase.from('attachments').insert({
+            file_path: filePath,
+            purchase_id: newPurchaseId,
+            uploaded_by: user.id,
+        });
       }
-
       notify.success('Compra registada com sucesso!');
-      if (onSuccess) {
-        onSuccess(); // Chama a função para fechar o modal e recarregar a lista
-      }
+      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Erro ao registar compra:', error);
       notify.error(error.message || 'Falha ao registar a compra.');
@@ -114,7 +124,10 @@ const PurchaseForm = ({ onSuccess }) => {
           </select>
         </div>
         <div className={styles.formGroup}>
-          <label htmlFor="cost_center">Centro de Custo</label>
+          <label htmlFor="cost_center" className={styles.labelWithIcon}>
+            Centro de Custo
+            {sessionDefaults.costCenterId && <FaThumbtack title="Valor padrão da sessão" />}
+          </label>
           <select id="cost_center" value={costCenterId} onChange={(e) => setCostCenterId(e.target.value)} required className={styles.select}>
             <option value="" disabled>Selecione um centro de custo</option>
             {costCenters.map(cc => <option key={cc.id} value={cc.id}>{cc.name}</option>)}
@@ -126,17 +139,44 @@ const PurchaseForm = ({ onSuccess }) => {
       <div className={styles.itemsList}>
         {items.map((item, index) => (
           <div key={index} className={styles.itemRow}>
-            <select value={item.product_id} onChange={(e) => handleItemChange(index, 'product_id', e.target.value)} required className={styles.select}>
-              <option value="" disabled>Selecione um produto</option>
-              {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <input type="number" placeholder="Qtd." value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required className={styles.input} min="1"/>
-            <input type="number" placeholder="Preço Unit." step="0.01" value={item.unit_price} onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)} required className={styles.input} min="0"/>
-            <Button type="button" variant="danger" onClick={() => removeItem(index)}>&times;</Button>
+            <div className={`${styles.formGroup} ${styles.productGroup}`}>
+              <label>Produto</label>
+              <select value={item.product_id} onChange={(e) => handleItemChange(index, 'product_id', e.target.value)} required className={styles.select}>
+                <option value="" disabled>Selecione</option>
+                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div className={`${styles.formGroup} ${styles.quantityGroup}`}>
+              <label>Quantidade</label>
+              <input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required className={styles.input} step="any" min="0.01"/>
+            </div>
+            <div className={`${styles.formGroup} ${styles.priceGroup}`}>
+              <label>Preço Unit.</label>
+              <input type="number" step="0.01" value={item.unit_price} onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)} required className={styles.input} min="0"/>
+            </div>
+            <Button type="button" variant="danger" isIconOnly onClick={() => removeItem(index)}>&times;</Button>
           </div>
         ))}
       </div>
       <Button type="button" variant="ghost" onClick={addItem}>Adicionar Item</Button>
+      
+      <div className={paymentStyles.paymentSection}>
+        <div className={paymentStyles.paymentHeader}>
+            <ToggleSwitch label="Adicionar Pagamento Imediato" checked={addPayment} onChange={setAddPayment} />
+        </div>
+        {addPayment && (
+            <div className={paymentStyles.paymentFields}>
+                <div className={paymentStyles.formGroup}>
+                    <label htmlFor="paymentAmount">Valor Pago</label>
+                    <input id="paymentAmount" type="number" step="0.01" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} className={paymentStyles.input} />
+                </div>
+                <div className={paymentStyles.formGroup}>
+                    <label htmlFor="attachment">Anexar Comprovativo</label>
+                    <input id="attachment" type="file" accept="image/*,.pdf" onChange={handleFileChange} className={paymentStyles.fileInput} />
+                </div>
+            </div>
+        )}
+      </div>
       
       <div className={styles.footer}>
         <div className={styles.total}>

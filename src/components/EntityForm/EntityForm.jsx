@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import styles from './EntityForm.module.css';
 import Button from '../Button/Button';
+import { FaSpinner } from 'react-icons/fa';
 
 const ROLES = ['Cliente', 'Fornecedor', 'Funcionário', 'Sócio'];
 
@@ -13,7 +14,8 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
     name: '',
     email: '',
     phone: '',
-    document_number: '', // Pode ser CPF, CNPJ ou CEP para busca
+    document_number: '',
+    cep: '', // Novo campo para o CEP
     address: '',
     entity_type: 'Pessoa',
   });
@@ -31,6 +33,7 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
         email: entityToEdit.email || '',
         phone: entityToEdit.phone || '',
         document_number: entityToEdit.document_number || '',
+        cep: '', // O CEP não é guardado, é apenas para busca
         address: entityToEdit.address || '',
         entity_type: entityToEdit.entity_type || 'Pessoa',
       });
@@ -53,13 +56,14 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
     setCepLoading(true);
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      if (!response.ok) throw new Error('Falha na resposta da API.');
       const data = await response.json();
       if (data.erro) {
         throw new Error('CEP não encontrado.');
       }
       setFormData(prev => ({
         ...prev,
-        address: `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`,
+        address: `${data.logradouro || ''}, ${data.bairro || ''}, ${data.localidade || ''} - ${data.uf || ''}`,
       }));
     } catch (error) {
       notify.error(error.message || 'Falha ao buscar o CEP.');
@@ -129,8 +133,8 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
       
       <div className={styles.grid}>
         <div className={styles.formGroup}>
-          <label htmlFor="document_number">CPF / CNPJ (ou CEP para buscar endereço)</label>
-          <input id="document_number" name="document_number" type="text" value={formData.document_number} onChange={handleChange} onBlur={handleCepBlur} />
+          <label htmlFor="document_number">CPF / CNPJ</label>
+          <input id="document_number" name="document_number" type="text" value={formData.document_number} onChange={handleChange} />
         </div>
         <div className={styles.formGroup}>
           <label>Tipo de Entidade</label>
@@ -141,9 +145,18 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
         </div>
       </div>
       
-      <div className={styles.formGroup}>
-          <label>Endereço {cepLoading && '(A procurar...)'}</label>
+      <div className={styles.addressSection}>
+        <div className={styles.formGroup}>
+          <label htmlFor="cep">
+            CEP
+            {cepLoading && <FaSpinner className={styles.spinner} />}
+          </label>
+          <input id="cep" name="cep" type="text" value={formData.cep} onChange={handleChange} onBlur={handleCepBlur} placeholder="Digite o CEP para buscar" />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Endereço</label>
           <input id="address" name="address" type="text" value={formData.address} onChange={handleChange} />
+        </div>
       </div>
 
       <div className={styles.formGroup}>

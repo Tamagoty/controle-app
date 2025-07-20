@@ -1,7 +1,7 @@
 // src/App.jsx
 
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Layout from './components/Layout/Layout';
@@ -20,6 +20,7 @@ import ContasAPagar from './pages/Financeiro/ContasAPagar';
 import RelatorioFinanceiro from './pages/Relatorios/RelatorioFinanceiro';
 import Socios from './pages/Capital/Socios';
 import TransacoesSocios from './pages/Capital/TransacoesSocios';
+import DashboardSocios from './pages/Capital/DashboardSocios'; // <-- NOVO
 import UserManagement from './pages/Admin/UserManagement';
 import MeuPerfil from './pages/Configuracoes/MeuPerfil';
 import ThemeSettings from './pages/Configuracoes/ThemeSettings';
@@ -53,14 +54,15 @@ function App() {
             <Route path="financeiro/contas-a-receber" element={<ContasAReceber />} />
             <Route path="financeiro/contas-a-pagar" element={<ContasAPagar />} />
             <Route path="relatorios/financeiro" element={<RelatorioFinanceiro />} />
-            <Route path="relatorios/detalhado" element={<RelatorioDetalhado />} /> {/* <-- Nova rota */}
+            <Route path="relatorios/detalhado" element={<RelatorioDetalhado />} />
             <Route path="relatorios/produtos" element={<RelatorioProdutos />} />
             <Route path="capital/socios" element={<Socios />} />
             <Route path="capital/transacoes" element={<TransacoesSocios />} />
-            <Route path="configuracoes/meu-perfil" element={<MeuPerfil />} /> {/* <-- Nova rota */}
-            <Route path="configuracoes/tema" element={<ThemeSettings />} /> {/* <-- Nova rota */}
-            <Route path="catalogos/categorias-de-produto" element={<ProductCategories />} /> {/* <-- Nova rota */}
-            <Route path="financeiro/categorias-de-despesa" element={<ExpenseCategories />} /> {/* <-- Nova rota */}
+            <Route path="capital/dashboard" element={<DashboardSocios />} /> {/* <-- NOVA ROTA */}
+            <Route path="configuracoes/meu-perfil" element={<MeuPerfil />} />
+            <Route path="configuracoes/tema" element={<ThemeSettings />} />
+            <Route path="catalogos/categorias-de-produto" element={<ProductCategories />} />
+            <Route path="financeiro/categorias-de-despesa" element={<ExpenseCategories />} />
             <Route path="relatorios/clientes" element={<RelatorioClientes />} />
             <Route path="admin/users" element={<UserManagement />} />
           </Route>

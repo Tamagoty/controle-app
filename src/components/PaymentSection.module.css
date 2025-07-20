@@ -1,0 +1,57 @@
+/* src/components/PaymentSection.module.css */
+
+.paymentSection {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-bg-primary);
+}
+
+.paymentHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.paymentFields {
+    display: flex;
+    flex-direction: column; /* Coloca os campos em linhas separadas */
+    gap: var(--spacing-lg);
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.formGroup label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+}
+
+.fileInput {
+    font-size: var(--font-size-sm);
+}
+
+.fileInput::file-selector-button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-right: var(--spacing-md);
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-primary);
+    cursor: pointer;
+}

@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useAuth } from './AuthContext'; // Precisamos de saber quem é o utilizador
+import { useAuth } from './AuthContext';
+import { v4 as uuidv4 } from 'uuid';
 
 const defaultTheme = {
   '--theme-bg-primary': '#1a1a1a',
@@ -18,21 +19,22 @@ const defaultTheme = {
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(defaultTheme);
-  const { user } = useAuth(); // Obtém o utilizador do contexto de autenticação
+  const [activeTheme, setActiveTheme] = useState(defaultTheme);
+  const [savedThemes, setSavedThemes] = useState([]);
+  const { user } = useAuth();
 
-  // Função para aplicar o tema ao DOM
   const applyTheme = useCallback((themeToApply) => {
     const root = document.documentElement;
-    for (const key in themeToApply) {
-      root.style.setProperty(key, themeToApply[key]);
+    const finalTheme = { ...defaultTheme, ...(themeToApply || {}) };
+    for (const key in finalTheme) {
+      root.style.setProperty(key, finalTheme[key]);
     }
-    setTheme(themeToApply);
+    setActiveTheme(finalTheme);
   }, []);
 
-  // Efeito para carregar o tema do utilizador quando ele faz login
+  // Efeito para carregar os temas do utilizador
   useEffect(() => {
-    const fetchUserTheme = async () => {
+    const fetchUserThemes = async () => {
       if (user) {
         try {
           const { data, error } = await supabase
@@ -41,49 +43,87 @@ export const ThemeProvider = ({ children }) => {
             .eq('user_id', user.id)
             .single();
 
-          if (error && error.code !== 'PGRST116') { // PGRST116 = 'not found'
-            throw error;
+          if (error && error.code !== 'PGRST116') throw error;
+          
+          const userThemes = data?.theme_settings || [];
+          setSavedThemes(userThemes);
+
+          const lastActiveThemeId = localStorage.getItem(`activeTheme_${user.id}`);
+          
+          // CORREÇÃO: Verifica se o último tema ativo foi o padrão
+          if (lastActiveThemeId === 'default') {
+            applyTheme(defaultTheme);
+          } else {
+            const themeToLoad = userThemes.find(t => t.id === lastActiveThemeId);
+            applyTheme(themeToLoad ? themeToLoad.settings : (userThemes[0]?.settings || defaultTheme));
           }
           
-          if (data && data.theme_settings) {
-            applyTheme({ ...defaultTheme, ...data.theme_settings });
-          } else {
-            applyTheme(defaultTheme); // Se não houver tema guardado, aplica o padrão
-          }
         } catch (err) {
-          console.error("Falha ao buscar o tema do utilizador:", err);
-          applyTheme(defaultTheme); // Em caso de erro, aplica o padrão
+          console.error("Falha ao buscar os temas do utilizador:", err);
+          applyTheme(defaultTheme);
         }
       }
     };
 
-    fetchUserTheme();
+    fetchUserThemes();
   }, [user, applyTheme]);
 
-  // Função para atualizar e guardar o tema
-  const updateTheme = async (newThemeSettings) => {
-    const newTheme = { ...theme, ...newThemeSettings };
+  const updateActiveTheme = (newThemeSettings) => {
+    const newTheme = { ...activeTheme, ...newThemeSettings };
     applyTheme(newTheme);
+  };
 
-    if (user) {
-      try {
-        const { error } = await supabase
-          .from('user_profiles')
-          .upsert({ user_id: user.id, theme_settings: newTheme });
-        if (error) throw error;
-      } catch (err) {
-        console.error("Falha ao guardar o tema do utilizador:", err);
-      }
+  const saveActiveTheme = async (themeName) => {
+    if (user && themeName) {
+      const newTheme = {
+        id: uuidv4(),
+        name: themeName,
+        settings: activeTheme,
+      };
+      const newSavedThemes = [...savedThemes, newTheme];
+      setSavedThemes(newSavedThemes);
+      await supabase
+        .from('user_profiles')
+        .upsert({ user_id: user.id, theme_settings: newSavedThemes });
     }
   };
 
-  // Função para restaurar o tema padrão
-  const resetTheme = () => {
-    updateTheme(defaultTheme);
+  const deleteTheme = async (themeId) => {
+    if (user) {
+        const newSavedThemes = savedThemes.filter(t => t.id !== themeId);
+        setSavedThemes(newSavedThemes);
+        await supabase
+            .from('user_profiles')
+            .upsert({ user_id: user.id, theme_settings: newSavedThemes });
+        
+        const lastActiveThemeId = localStorage.getItem(`activeTheme_${user.id}`);
+        if(lastActiveThemeId === themeId) {
+            localStorage.setItem(`activeTheme_${user.id}`, 'default');
+            applyTheme(defaultTheme);
+        }
+    }
+  };
+
+  const loadTheme = (themeId) => {
+    const themeToLoad = savedThemes.find(t => t.id === themeId);
+    if (themeToLoad) {
+        applyTheme(themeToLoad.settings);
+        if (user) {
+            localStorage.setItem(`activeTheme_${user.id}`, themeId);
+        }
+    }
+  };
+
+  const resetActiveTheme = () => {
+    applyTheme(defaultTheme);
+    if (user) {
+        // CORREÇÃO: Em vez de remover, define o tema ativo como 'default'
+        localStorage.setItem(`activeTheme_${user.id}`, 'default');
+    }
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, updateTheme, resetTheme }}>
+    <ThemeContext.Provider value={{ activeTheme, savedThemes, updateActiveTheme, saveActiveTheme, deleteTheme, loadTheme, resetActiveTheme }}>
       {children}
     </ThemeContext.Provider>
   );

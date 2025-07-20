@@ -6,14 +6,18 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import './styles/theme.css'; // O único arquivo de estilo global necessário
+import { SessionDefaultsProvider } from './context/SessionDefaultsContext'; // <-- NOVO
+import './styles/theme.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
-          <App />
+          {/* Envolvemos a aplicação com o novo Provider */}
+          <SessionDefaultsProvider>
+            <App />
+          </SessionDefaultsProvider>
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>

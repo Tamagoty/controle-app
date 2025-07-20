@@ -5,13 +5,14 @@ import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import styles from './ProductForm.module.css';
 import Button from '../Button/Button';
+import CurrencyInput from '../CurrencyInput/CurrencyInput'; // <-- NOVO
 
 const ProductForm = ({ productToEdit, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    sale_price: '',
-    purchase_price: '',
+    sale_price: 0,
+    purchase_price: 0,
     product_type: 'Ambos',
     unit_of_measure: 'un',
     category_id: '',
@@ -22,7 +23,6 @@ const ProductForm = ({ productToEdit, onSuccess }) => {
   const isEditing = !!productToEdit;
 
   useEffect(() => {
-    // Busca as categorias de produtos para popular o dropdown
     const fetchCategories = async () => {
       const { data } = await supabase.from('product_categories').select('id, name');
       if (data) setCategories(data);
@@ -33,8 +33,8 @@ const ProductForm = ({ productToEdit, onSuccess }) => {
       setFormData({
         name: productToEdit.name || '',
         description: productToEdit.description || '',
-        sale_price: productToEdit.sale_price || '',
-        purchase_price: productToEdit.purchase_price || '',
+        sale_price: productToEdit.sale_price || 0,
+        purchase_price: productToEdit.purchase_price || 0,
         product_type: productToEdit.product_type || 'Ambos',
         unit_of_measure: productToEdit.unit_of_measure || 'un',
         category_id: productToEdit.category_id || '',
@@ -42,8 +42,7 @@ const ProductForm = ({ productToEdit, onSuccess }) => {
     }
   }, [productToEdit, isEditing]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -52,12 +51,9 @@ const ProductForm = ({ productToEdit, onSuccess }) => {
     setLoading(true);
 
     const payload = {
-      name: formData.name,
-      description: formData.description,
+      ...formData,
       sale_price: parseFloat(formData.sale_price),
-      purchase_price: parseFloat(formData.purchase_price),
-      product_type: formData.product_type,
-      unit_of_measure: formData.unit_of_measure,
+      purchase_price: parseFloat(formData.purchase_price) || 0,
       category_id: formData.category_id ? parseInt(formData.category_id, 10) : null,
     };
 
@@ -82,31 +78,31 @@ const ProductForm = ({ productToEdit, onSuccess }) => {
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.formGroup}>
         <label htmlFor="name">Nome do Produto</label>
-        <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
+        <input id="name" name="name" type="text" value={formData.name} onChange={(e) => handleChange(e.target.name, e.target.value)} required className={styles.input} />
       </div>
 
       <div className={styles.grid}>
         <div className={styles.formGroup}>
-          <label htmlFor="purchase_price">Preço de Compra (R$)</label>
-          <input id="purchase_price" name="purchase_price" type="number" step="0.01" value={formData.purchase_price} onChange={handleChange} />
+          <label htmlFor="purchase_price">Preço de Compra</label>
+          <CurrencyInput value={formData.purchase_price} onChange={(value) => handleChange('purchase_price', value)} />
         </div>
         <div className={styles.formGroup}>
-          <label htmlFor="sale_price">Preço de Venda (R$)</label>
-          <input id="sale_price" name="sale_price" type="number" step="0.01" value={formData.sale_price} onChange={handleChange} required />
+          <label htmlFor="sale_price">Preço de Venda</label>
+          <CurrencyInput value={formData.sale_price} onChange={(value) => handleChange('sale_price', value)} />
         </div>
       </div>
 
       <div className={styles.grid}>
         <div className={styles.formGroup}>
           <label htmlFor="category_id">Categoria</label>
-          <select id="category_id" name="category_id" value={formData.category_id} onChange={handleChange}>
+          <select id="category_id" name="category_id" value={formData.category_id} onChange={(e) => handleChange(e.target.name, e.target.value)} className={styles.select}>
             <option value="">Sem categoria</option>
             {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
           </select>
         </div>
         <div className={styles.formGroup}>
           <label htmlFor="product_type">Tipo</label>
-          <select id="product_type" name="product_type" value={formData.product_type} onChange={handleChange}>
+          <select id="product_type" name="product_type" value={formData.product_type} onChange={(e) => handleChange(e.target.name, e.target.value)} className={styles.select}>
             <option value="Ambos">Ambos (Venda e Uso)</option>
             <option value="Venda">Apenas Venda</option>
             <option value="Compra">Apenas Uso/Compra</option>
@@ -114,13 +110,13 @@ const ProductForm = ({ productToEdit, onSuccess }) => {
         </div>
         <div className={styles.formGroup}>
           <label htmlFor="unit_of_measure">Unidade de Medida</label>
-          <input id="unit_of_measure" name="unit_of_measure" type="text" value={formData.unit_of_measure} onChange={handleChange} />
+          <input id="unit_of_measure" name="unit_of_measure" type="text" value={formData.unit_of_measure} onChange={(e) => handleChange(e.target.name, e.target.value)} className={styles.input} />
         </div>
       </div>
       
       <div className={styles.formGroup}>
         <label htmlFor="description">Descrição</label>
-        <textarea id="description" name="description" value={formData.description} onChange={handleChange} />
+        <textarea id="description" name="description" value={formData.description} onChange={(e) => handleChange(e.target.name, e.target.value)} className={styles.textarea} />
       </div>
 
       <div className={styles.formActions}>

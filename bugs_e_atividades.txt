@@ -1,12 +1,18 @@
-1 - Formulário de criação do centro de custo, adicionar o campo data de criação.
+[✅] 1 - Formulário de criação do centro de custo, adicionar o campo data de criação.
 
-2 - adicionar a possibilidade de salvar o tema de uso por perfil de usuario no banco de dados
+[✅] 2 - adicionar a possibilidade de salvar o tema de uso por perfil de usuario no banco de dados
 
-3 - Utilizadores, possibilidade de adicionar funcionário.
+[✅] 3 - Utilizadores, possibilidade de adicionar funcionário.
 
 4 - Implementar endereços viaCep (baixa prioridade)
 
-5 - Relatórios sendo gerando fora do fuso horário, operações do dia não aparecem. (já resolvemos)
+[✅] 5 - Relatórios sendo gerando fora do fuso horário, operações do dia não aparecem. (já resolvemos)
 
-6 - retirar a obrigatóriedade de telefone, email e de cpf/cnpj no cadastro dos clientes, quando não for fornecido a informação ser enviada como NULL
+[✅] 6 - retirar a obrigatóriedade de telefone, email e de cpf/cnpj no cadastro dos clientes, quando não for fornecido a informação ser enviada como NULL
+
+[✅] 7 - o aporte do socio não está aparecendo no relátorio financeiro
+
+8 - modal para adicionar um novo produto dentro da pagina de produtos não está visualmente compátivel com a identidade visual do restante do aplicativo.
+
+9 - Selecionar um centro de custo padrão para trabalho, as vezes fazemos várias inclusões de uma só vez e é desnecessário sempre ta selecionando o mesmo centro de custo assim como o vendedor e a comissão, só criar um estimulo visual para informar que essas informações foram persistidas na reabertura do modal.
 

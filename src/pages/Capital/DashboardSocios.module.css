@@ -1,0 +1,51 @@
+/* src/pages/Capital/DashboardSocios.module.css */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.selectorContainer {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    background-color: var(--color-bg-secondary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+}
+
+.selectorContainer label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.partnerSelect {
+    padding: var(--spacing-sm);
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    min-width: 200px;
+}
+
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.inflow {
+    color: var(--color-success);
+    font-weight: bold;
+}
+
+.outflow {
+    color: var(--color-danger);
+    font-weight: bold;
+}

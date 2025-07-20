@@ -18,6 +18,7 @@
 }
 
 .input,
+.select,
 .textarea {
   width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
@@ -30,6 +31,7 @@
 }
 
 .input:focus,
+.select:focus,
 .textarea:focus {
   outline: none;
   border-color: var(--color-primary);
@@ -38,6 +40,12 @@
 .textarea {
   min-height: 100px;
   resize: vertical;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-lg);
 }
 
 .formActions {

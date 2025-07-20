@@ -48,7 +48,6 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
     <aside className={sidebarClasses}>
       <div>
         <div className={styles.logoContainer}>
-          {/* O logo e o nome agora estão dentro de um NavLink que aponta para a página inicial */}
           <NavLink to="/" className={styles.logoLink} onClick={handleLinkClick}>
             {logoUrl && <img src={logoUrl} alt="Logo do Aplicativo" className={styles.logoImage} />}
             <h2 className={styles.logo} title={appName}>{appName}</h2>
@@ -75,7 +74,8 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
             </SidebarSection>
             
             <SidebarSection title="Capital" sectionKey="capital" openSection={openSection} setOpenSection={setOpenSection}>
-                <NavItem to="/capital/socios" onClick={handleLinkClick}>Sócios</NavItem>
+                <NavItem to="/capital/dashboard" onClick={handleLinkClick}>Dashboard de Sócios</NavItem> {/* <-- NOVO LINK */}
+                <NavItem to="/capital/socios" onClick={handleLinkClick}>Gestão de Sócios</NavItem>
                 <NavItem to="/capital/transacoes" onClick={handleLinkClick}>Transações</NavItem>
             </SidebarSection>
             
@@ -94,7 +94,6 @@ const Sidebar = ({ isOpen, onLinkClick }) => {
             
             <SidebarSection title="Configurações" sectionKey="configuracoes" openSection={openSection} setOpenSection={setOpenSection}>
                 <NavItem to="/configuracoes/meu-perfil" onClick={handleLinkClick}>Meu Perfil</NavItem>
-                {/* CORREÇÃO: Adicionado o link para a página de personalização de tema */}
                 <NavItem to="/configuracoes/tema" onClick={handleLinkClick}>Aparência</NavItem>
             </SidebarSection>
 

@@ -15,6 +15,9 @@
 .formGroup label {
   font-weight: 500;
   color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .formGroup input,
@@ -32,6 +35,23 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-lg);
+}
+
+/* Nova secção para o endereço */
+.addressSection {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: var(--spacing-lg);
+    align-items: end;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .rolesContainer {
@@ -59,7 +79,7 @@
 }
 
 @media (max-width: 768px) {
-  .grid {
+  .grid, .addressSection {
     grid-template-columns: 1fr;
   }
 }

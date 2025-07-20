@@ -1,0 +1,21 @@
+/* src/components/CurrencyInput/CurrencyInput.module.css */
+
+.input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    transition: border-color var(--transition-speed);
+}
+  
+.input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.currencyInput {
+    text-align: right;
+}

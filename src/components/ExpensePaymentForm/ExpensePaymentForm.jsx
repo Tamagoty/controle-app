@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import Button from '../Button/Button';
+import Modal from '../Modal/Modal';
+import FileUploader from '../FileUploader/FileUploader';
 import styles from './ExpensePaymentForm.module.css';
 import { FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 
@@ -13,11 +15,15 @@ const ExpensePaymentForm = ({ expense, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(true);
   
-  // Estados para controlar a edição
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [editingAmount, setEditingAmount] = useState('');
   
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState(null);
+  
   const notify = useNotify();
+
+  const handleFocus = (event) => event.target.select();
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -31,14 +37,14 @@ const ExpensePaymentForm = ({ expense, onSuccess }) => {
           
         if (error) throw error;
         setPayments(data || []);
-      } catch (error) {
-        notify.error("Não foi possível carregar os pagamentos.");
+      } catch (err) {
+        notify.error(err.message || "Não foi possível carregar os pagamentos.");
       } finally {
         setListLoading(false);
       }
     };
     if (expense.id) fetchPayments();
-  }, [expense.id]);
+  }, [expense.id, notify]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,16 +72,23 @@ const ExpensePaymentForm = ({ expense, onSuccess }) => {
     }
   };
 
-  const handleDeletePayment = async (paymentId) => {
-    if (window.confirm('Tem a certeza que quer apagar este pagamento?')) {
-      try {
-        const { error } = await supabase.from('expense_payments').delete().eq('id', paymentId);
-        if (error) throw error;
-        notify.success('Pagamento apagado com sucesso!');
-        if (onSuccess) onSuccess();
-      } catch (error) {
-        notify.error(error.message || 'Falha ao apagar o pagamento.');
-      }
+  const handleDeletePayment = (paymentId) => {
+    setPaymentToDelete(paymentId);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDeletePayment = async () => {
+    if (!paymentToDelete) return;
+    try {
+      const { error } = await supabase.from('expense_payments').delete().eq('id', paymentToDelete);
+      if (error) throw error;
+      notify.success('Pagamento apagado com sucesso!');
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      notify.error(error.message || 'Falha ao apagar o pagamento.');
+    } finally {
+      setIsConfirmModalOpen(false);
+      setPaymentToDelete(null);
     }
   };
 
@@ -128,7 +141,7 @@ const ExpensePaymentForm = ({ expense, onSuccess }) => {
         </div>
         <div className={styles.formGroup}>
           <label htmlFor="amount">Valor a Pagar</label>
-          <input id="amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required className={styles.input} />
+          <input id="amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} onFocus={handleFocus} required className={styles.input} />
         </div>
         <div className={styles.formActions}>
           <Button type="submit" disabled={loading || expense.balance <= 0}>
@@ -145,7 +158,7 @@ const ExpensePaymentForm = ({ expense, onSuccess }) => {
               <li key={p.id} className={editingPaymentId === p.id ? styles.editingItem : ''}>
                 {editingPaymentId === p.id ? (
                   <>
-                    <input type="number" value={editingAmount} onChange={(e) => setEditingAmount(e.target.value)} className={styles.editInput} autoFocus/>
+                    <input type="number" value={editingAmount} onChange={(e) => setEditingAmount(e.target.value)} onFocus={handleFocus} className={styles.editInput} autoFocus/>
                     <div className={styles.paymentActions}>
                       <Button icon={FaCheck} variant="success" isIconOnly onClick={handleUpdatePayment}>Guardar</Button>
                       <Button icon={FaTimes} variant="ghost" isIconOnly onClick={handleCancelEdit}>Cancelar</Button>
@@ -170,6 +183,18 @@ const ExpensePaymentForm = ({ expense, onSuccess }) => {
           <p className={styles.noPayments}>Nenhum pagamento registado.</p>
         )}
       </div>
+
+      <FileUploader key={expense.id} recordId={expense.id} recordType="expense" />
+
+      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Confirmar Exclusão">
+        <div>
+          <p>Tem a certeza que quer apagar este pagamento?</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+            <Button variant="ghost" onClick={() => setIsConfirmModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDeletePayment}>Apagar</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

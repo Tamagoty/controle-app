@@ -16,14 +16,20 @@ const UserRoleForm = ({ user, onSuccess }) => {
     setLoading(true);
 
     try {
-      // 'upsert' é uma operação inteligente: se o utilizador já tem um papel,
-      // ele atualiza (UPDATE). Se não tem, ele cria (INSERT).
+      // CORREÇÃO: Adicionamos a opção { onConflict: 'user_id' }.
+      // Isto diz ao Supabase: "Se já existir uma linha com este user_id,
+      // em vez de criar uma nova, por favor, atualize a que já existe."
       const { error } = await supabase
         .from('user_roles')
-        .upsert({ 
-          user_id: user.user_id, // A chave para encontrar o registo
-          role: selectedRole 
-        });
+        .upsert(
+          { 
+            user_id: user.user_id,
+            role: selectedRole 
+          },
+          {
+            onConflict: 'user_id',
+          }
+        );
 
       if (error) throw error;
       notify.success('Papel do utilizador atualizado com sucesso!');

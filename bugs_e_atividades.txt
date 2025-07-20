@@ -1,0 +1,12 @@
+1 - Formulário de criação do centro de custo, adicionar o campo data de criação.
+
+2 - adicionar a possibilidade de salvar o tema de uso por perfil de usuario no banco de dados
+
+3 - Utilizadores, possibilidade de adicionar funcionário.
+
+4 - Implementar endereços viaCep (baixa prioridade)
+
+5 - Relatórios sendo gerando fora do fuso horário, operações do dia não aparecem. (já resolvemos)
+
+6 - retirar a obrigatóriedade de telefone, email e de cpf/cnpj no cadastro dos clientes, quando não for fornecido a informação ser enviada como NULL
+

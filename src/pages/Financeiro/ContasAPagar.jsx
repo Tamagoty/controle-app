@@ -1,7 +1,6 @@
 // src/pages/Financeiro/ContasAPagar.jsx
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import React, { useState } from 'react';
 import { FaPaperPlane } from 'react-icons/fa';
 import Card from '../../components/Card/Card';
 import Table from '../../components/Table/Table';
@@ -9,31 +8,15 @@ import Button from '../../components/Button/Button';
 import Modal from '../../components/Modal/Modal';
 import SupplierPaymentForm from '../../components/SupplierPaymentForm/SupplierPaymentForm';
 import ProgressBar from '../../components/ProgressBar/ProgressBar';
-import { useNotify } from '../../hooks/useNotify';
+import { useContasAPagar } from '../../hooks/useContasAPagar'; // <-- NOSSO NOVO HOOK!
 
 const ContasAPagar = () => {
-  const [summary, setSummary] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // --- LÓGICA DE DADOS DO HOOK ---
+  const { summary, loading, fetchSummary } = useContasAPagar();
+
+  // --- ESTADOS LOCAIS DO COMPONENTE (UI) ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
-  const notify = useNotify();
-
-  const fetchSummary = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_accounts_payable_summary');
-      if (error) throw error;
-      setSummary(data || []);
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível carregar os dados.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSummary();
-  }, []);
 
   const handleSuccess = () => {
     fetchSummary();

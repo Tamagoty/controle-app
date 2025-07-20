@@ -1,6 +1,6 @@
 // src/pages/Pessoas.jsx
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { FaPlus, FaUserEdit, FaUser, FaBuilding } from 'react-icons/fa';
 import Card from '../components/Card/Card';
@@ -11,36 +11,22 @@ import EntityForm from '../components/EntityForm/EntityForm';
 import ToggleSwitch from '../components/ToggleSwitch/ToggleSwitch';
 import Pagination from '../components/Pagination/Pagination';
 import { useNotify } from '../hooks/useNotify';
+import { usePessoas } from '../hooks/usePessoas'; // <-- NOSSO NOVO HOOK!
 import styles from './Pessoas.module.css';
 
 const ITEMS_PER_PAGE = 10;
 
 const Pessoas = () => {
-  const [entities, setEntities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // --- LÓGICA DE DADOS DO HOOK ---
+  const { entities, loading, fetchEntities } = usePessoas();
+
+  // --- ESTADOS LOCAIS DO COMPONENTE (UI) ---
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'ascending' });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEntity, setEditingEntity] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const notify = useNotify();
-
-  const fetchEntities = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_entities_with_roles');
-      if (error) throw error;
-      setEntities(data || []);
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível carregar as entidades.');
-    } finally {
-      setLoading(false);
-    }
-  }, []); // CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
-
-  useEffect(() => {
-    fetchEntities();
-  }, [fetchEntities]);
 
   const filteredEntities = useMemo(() => {
     if (!searchTerm) {
@@ -86,10 +72,11 @@ const Pessoas = () => {
   const handleStatusChange = async (entityId, newStatus) => {
     try {
       await supabase.from('entities').update({ is_active: newStatus }).eq('id', entityId);
-      setEntities(current => current.map(entity => entity.id === entityId ? { ...entity, is_active: newStatus } : entity));
+      fetchEntities(); 
       notify.success('Status atualizado com sucesso!');
-    } catch (error) {
-      notify.error('Falha ao atualizar o status.');
+    } catch (err) {
+      // CORREÇÃO: Utiliza a mensagem de erro da variável 'err'.
+      notify.error(err.message || 'Falha ao atualizar o status.');
     }
   };
 

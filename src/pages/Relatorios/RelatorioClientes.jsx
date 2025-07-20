@@ -1,41 +1,23 @@
 // src/pages/Relatorios/RelatorioClientes.jsx
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../../components/Card/Card';
 import ClientReportCard from '../../components/ClientReportCard/ClientReportCard';
-import { useNotify } from '../../hooks/useNotify';
+import { useRelatorioClientes } from '../../hooks/useRelatorioClientes'; // <-- NOSSO NOVO HOOK!
 import styles from './RelatorioClientes.module.css';
 
 const RelatorioClientes = () => {
-  const [reportData, setReportData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [dates, setDates] = useState({
     start: new Date(new Date().setDate(1)).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const notify = useNotify();
 
-  const fetchReport = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_client_sales_report', {
-        p_start_date: dates.start,
-        p_end_date: dates.end,
-      });
-      if (error) throw error;
-      setReportData(data || []);
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível gerar o relatório.');
-    } finally {
-      setLoading(false);
-    }
-  }, [dates]);
+  const { reportData, loading, fetchReport } = useRelatorioClientes(dates);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
+    fetchReport(dates);
+  }, [dates, fetchReport]);
 
   const filteredData = useMemo(() => {
     return reportData.filter(client =>
@@ -65,13 +47,17 @@ const RelatorioClientes = () => {
 
       {loading ? <p>A gerar relatório...</p> : (
         <div className={styles.reportContainer}>
-          {filteredData.map(clientSummary => (
-            <ClientReportCard 
-              key={clientSummary.client_id}
-              clientSummary={clientSummary}
-              dates={dates}
-            />
-          ))}
+          {filteredData.length > 0 ? (
+            filteredData.map(clientSummary => (
+              <ClientReportCard 
+                key={clientSummary.client_id}
+                clientSummary={clientSummary}
+                dates={dates}
+              />
+            ))
+          ) : (
+            <p>Nenhum dado encontrado para o período selecionado.</p>
+          )}
         </div>
       )}
     </div>

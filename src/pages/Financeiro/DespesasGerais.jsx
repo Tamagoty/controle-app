@@ -1,7 +1,6 @@
 // src/pages/Financeiro/DespesasGerais.jsx
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import React, { useState, useMemo } from 'react';
 import { FaPlus, FaMoneyBillWave } from 'react-icons/fa';
 import Card from '../../components/Card/Card';
 import Table from '../../components/Table/Table';
@@ -11,38 +10,21 @@ import ExpenseForm from '../../components/ExpenseForm/ExpenseForm';
 import ExpensePaymentForm from '../../components/ExpensePaymentForm/ExpensePaymentForm';
 import ProgressBar from '../../components/ProgressBar/ProgressBar';
 import Pagination from '../../components/Pagination/Pagination';
-import { useNotify } from '../../hooks/useNotify';
+import { useDespesas } from '../../hooks/useDespesas'; // <-- NOSSO NOVO HOOK!
 
 const ITEMS_PER_PAGE = 10;
 
 const DespesasGerais = () => {
-  const [expenses, setExpenses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // --- LÓGICA DE DADOS DO HOOK ---
+  const { expenses, loading, fetchExpenses } = useDespesas();
+
+  // --- ESTADOS LOCAIS DO COMPONENTE (UI) ---
   const [sortConfig, setSortConfig] = useState({ key: 'expense_date', direction: 'descending' });
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const notify = useNotify();
 
-  const fetchExpenses = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_expenses_with_payment_status');
-      if (error) throw error;
-      setExpenses(data || []);
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível carregar as despesas.');
-    } finally {
-      setLoading(false);
-    }
-  }, []); //CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
-
-
-  useEffect(() => {
-    fetchExpenses();
-  }, [fetchExpenses]);
-  
   const sortedExpenses = useMemo(() => {
     let sortableItems = [...expenses];
     if (sortConfig !== null) {

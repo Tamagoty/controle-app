@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import Button from '../Button/Button';
+import Modal from '../Modal/Modal';
 import styles from './CommissionPaymentForm.module.css';
 import { FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 
@@ -14,6 +15,10 @@ const CommissionPaymentForm = ({ seller, onSuccess }) => {
   const [listLoading, setListLoading] = useState(true);
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [editingAmount, setEditingAmount] = useState('');
+  
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState(null);
+
   const notify = useNotify();
 
   useEffect(() => {
@@ -25,14 +30,14 @@ const CommissionPaymentForm = ({ seller, onSuccess }) => {
         });
         if (error) throw error;
         setPayments(data || []);
-      } catch (error) {
-        notify.error("Não foi possível carregar o histórico de pagamentos.");
+      } catch (err) {
+        notify.error(err.message || "Não foi possível carregar o histórico de pagamentos.");
       } finally {
         setListLoading(false);
       }
     };
     if (seller.seller_id) fetchPayments();
-  }, [seller.seller_id]);
+  }, [seller.seller_id, notify]); // CORREÇÃO: 'notify' foi adicionado de volta à lista de dependências.
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,16 +68,23 @@ const CommissionPaymentForm = ({ seller, onSuccess }) => {
     }
   };
 
-  const handleDelete = async (paymentId) => {
-    if (window.confirm('Tem a certeza que quer apagar este pagamento?')) {
-      try {
-        const { error } = await supabase.from('commission_payments').delete().eq('id', paymentId);
-        if (error) throw error;
-        notify.success('Pagamento apagado!');
-        if (onSuccess) onSuccess();
-      } catch (error) {
-        notify.error(error.message || 'Falha ao apagar o pagamento.');
-      }
+  const handleDelete = (paymentId) => {
+    setPaymentToDelete(paymentId);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!paymentToDelete) return;
+    try {
+      const { error } = await supabase.from('commission_payments').delete().eq('id', paymentToDelete);
+      if (error) throw error;
+      notify.success('Pagamento apagado!');
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      notify.error(error.message || 'Falha ao apagar o pagamento.');
+    } finally {
+      setIsConfirmModalOpen(false);
+      setPaymentToDelete(null);
     }
   };
 
@@ -153,6 +165,16 @@ const CommissionPaymentForm = ({ seller, onSuccess }) => {
           </ul>
         ) : <p className={styles.noPayments}>Nenhum pagamento registado.</p>}
       </div>
+      
+      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Confirmar Exclusão">
+        <div>
+          <p>Tem a certeza que quer apagar este pagamento de comissão?</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+            <Button variant="ghost" onClick={() => setIsConfirmModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDelete}>Apagar</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

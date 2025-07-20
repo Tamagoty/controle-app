@@ -1,7 +1,6 @@
 // src/pages/Vendas.jsx
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState, useMemo } from 'react';
 import { FaPlus, FaMoneyBillWave } from 'react-icons/fa';
 import Card from '../components/Card/Card';
 import Table from '../components/Table/Table';
@@ -11,47 +10,29 @@ import SaleForm from '../components/SaleForm/SaleForm';
 import SalePaymentForm from '../components/SalePaymentForm/SalePaymentForm';
 import ProgressBar from '../components/ProgressBar/ProgressBar';
 import Pagination from '../components/Pagination/Pagination';
-import { useNotify } from '../hooks/useNotify';
+import { useVendas } from '../hooks/useVendas'; // <-- NOSSO NOVO HOOK!
 import styles from './Vendas.module.css';
 
 const ITEMS_PER_PAGE = 10;
 
 const Vendas = () => {
-  // --- ESTADOS DO COMPONENTE ---
-  const [sales, setSales] = useState([]); // Guarda a lista COMPLETA de vendas
-  const [loading, setLoading] = useState(true);
+  // --- A LÓGICA DE DADOS AGORA VEM DO NOSSO HOOK ---
+  const { vendas, loading, fetchVendas } = useVendas();
+
+  // --- ESTADOS LOCAIS DO COMPONENTE (apenas para UI) ---
   const [currentPage, setCurrentPage] = useState(1);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
-  const notify = useNotify();
-
-  // --- ESTADOS PARA OS FILTROS (ATUALIZADOS) ---
+  
+  // --- ESTADOS PARA OS FILTROS ---
   const [filterClientName, setFilterClientName] = useState('');
   const [filterCostCenterName, setFilterCostCenterName] = useState('');
   const [filterPaymentStatus, setFilterPaymentStatus] = useState('');
 
-  // --- LÓGICA DE DADOS ---
-  const fetchSales = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_sales_with_payment_status');
-      if (error) throw error;
-      setSales(data || []);
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível carregar as vendas.');
-    } finally {
-      setLoading(false);
-    }
-  }, []); // CORREÇÃO: Removido 'notify' das dependências para quebrar o loop.
-
-  useEffect(() => {
-    fetchSales();
-  }, [fetchSales]);
-
-  // LÓGICA DE FILTRAGEM ATUALIZADA
+  // A lógica de filtragem continua a mesma
   const filteredSales = useMemo(() => {
-    return sales
+    return vendas
       .filter(sale => 
         filterClientName ? sale.client_name.toLowerCase().includes(filterClientName.toLowerCase()) : true
       )
@@ -66,7 +47,7 @@ const Vendas = () => {
         if (filterPaymentStatus === 'nao_pago') return sale.total_paid === 0;
         return true;
       });
-  }, [sales, filterClientName, filterCostCenterName, filterPaymentStatus]);
+  }, [vendas, filterClientName, filterCostCenterName, filterPaymentStatus]);
 
   const currentTableData = useMemo(() => {
     const firstPageIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -76,7 +57,7 @@ const Vendas = () => {
   
   // --- MANIPULADORES DE EVENTOS ---
   const handleSuccess = () => {
-    fetchSales();
+    fetchVendas(); // A função para recarregar os dados vem do nosso hook
     setIsSaleModalOpen(false);
     setIsPaymentModalOpen(false);
   };
@@ -101,7 +82,6 @@ const Vendas = () => {
         <Button icon={FaPlus} onClick={() => setIsSaleModalOpen(true)}>Nova Venda</Button>
       </div>
       
-      {/* FILTROS ATUALIZADOS */}
       <Card className={styles.filterCard}>
         <input 
           type="text"

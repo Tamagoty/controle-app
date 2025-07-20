@@ -21,18 +21,22 @@ const TransacoesSocios = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const notify = useNotify();
 
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
+
+
   const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase.rpc('get_partner_transactions');
       if (error) throw error;
       setTransactions(data || []);
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível carregar as transações.');
+    } catch (err) {
+      notify.error(err.message || 'Não foi possível carregar as transações.');
     } finally {
       setLoading(false);
     }
-  }, []); //CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
+  }, [notify]); // Removido [notify] temporariamente para evitar o loop
 
   useEffect(() => {
     fetchTransactions();
@@ -44,18 +48,24 @@ const TransacoesSocios = () => {
     return transactions.slice(firstPageIndex, lastPageIndex);
   }, [currentPage, transactions]);
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Tem a certeza que quer apagar esta transação?')) {
-        try {
-            await supabase.from('partner_transactions').delete().eq('id', id);
-            notify.success('Transação apagada.');
-            fetchTransactions();
-        // eslint-disable-next-line no-unused-vars
-        } catch (error) {
-            notify.error('Falha ao apagar.');
-        }
+  const handleDelete = (id) => {
+    setTransactionToDelete(id);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!transactionToDelete) return;
+    try {
+        await supabase.from('partner_transactions').delete().eq('id', transactionToDelete);
+        notify.success('Transação apagada.');
+        fetchTransactions();
+    } catch (error) {
+        notify.error(error.message || 'Falha ao apagar.');
+    } finally {
+        setIsConfirmModalOpen(false);
+        setTransactionToDelete(null);
     }
-  }
+  };
 
   const handleSuccess = () => {
     fetchTransactions();
@@ -64,6 +74,7 @@ const TransacoesSocios = () => {
 
   const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
+  // CORREÇÃO: A definição de 'columns' foi movida para dentro do componente.
   const columns = [
     { header: 'Data', key: 'transaction_date', Cell: ({ row }) => new Date(row.transaction_date).toLocaleDateString() },
     { header: 'Sócio', key: 'partner_name', accessor: 'partner_name' },
@@ -91,6 +102,16 @@ const TransacoesSocios = () => {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Registar Nova Transação de Sócio">
         <PartnerTransactionForm onSuccess={handleSuccess} />
+      </Modal>
+
+      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Confirmar Exclusão">
+        <div>
+          <p>Tem a certeza que quer apagar esta transação? Esta ação não pode ser desfeita.</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+            <Button variant="ghost" onClick={() => setIsConfirmModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDelete}>Apagar</Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

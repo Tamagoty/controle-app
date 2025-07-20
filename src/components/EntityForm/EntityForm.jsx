@@ -13,12 +13,13 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
     name: '',
     email: '',
     phone: '',
-    document_number: '',
+    document_number: '', // Pode ser CPF, CNPJ ou CEP para busca
     address: '',
     entity_type: 'Pessoa',
   });
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
   const notify = useNotify();
 
   const isEditing = !!entityToEdit;
@@ -43,6 +44,30 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // --- LÓGICA DO VIACEP ---
+  const handleCepBlur = async (e) => {
+    const cep = e.target.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+    if (cep.length !== 8) {
+      return; // Só busca se tiver 8 dígitos
+    }
+    setCepLoading(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+      if (data.erro) {
+        throw new Error('CEP não encontrado.');
+      }
+      setFormData(prev => ({
+        ...prev,
+        address: `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`,
+      }));
+    } catch (error) {
+      notify.error(error.message || 'Falha ao buscar o CEP.');
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
   const handleRoleChange = (role) => {
     setSelectedRoles(prev => 
       prev.includes(role) 
@@ -57,31 +82,22 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
 
     try {
       let error;
+      const rpcName = isEditing ? 'update_entity_with_roles' : 'create_entity_with_roles';
+      const params = {
+        name_param: formData.name,
+        email_param: formData.email,
+        phone_param: formData.phone,
+        document_number_param: formData.document_number,
+        address_param: formData.address,
+        entity_type_param: formData.entity_type,
+        roles_param: selectedRoles
+      };
       if (isEditing) {
-        // Modo de Edição
-        ({ error } = await supabase.rpc('update_entity_with_roles', {
-          entity_id_param: entityToEdit.id,
-          name_param: formData.name,
-          email_param: formData.email,
-          phone_param: formData.phone,
-          document_number_param: formData.document_number,
-          address_param: formData.address,
-          entity_type_param: formData.entity_type,
-          roles_param: selectedRoles
-        }));
-      } else {
-        // Modo de Criação
-        ({ error } = await supabase.rpc('create_entity_with_roles', {
-          name_param: formData.name,
-          email_param: formData.email,
-          phone_param: formData.phone,
-          document_number_param: formData.document_number,
-          address_param: formData.address,
-          entity_type_param: formData.entity_type,
-          roles_param: selectedRoles
-        }));
+        params.entity_id_param = entityToEdit.id;
       }
 
+      ({ error } = await supabase.rpc(rpcName, params));
+      
       if (error) throw error;
 
       notify.success(`Entidade ${isEditing ? 'atualizada' : 'criada'} com sucesso!`);
@@ -113,8 +129,8 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
       
       <div className={styles.grid}>
         <div className={styles.formGroup}>
-          <label htmlFor="document_number">CPF / CNPJ</label>
-          <input id="document_number" name="document_number" type="text" value={formData.document_number} onChange={handleChange} />
+          <label htmlFor="document_number">CPF / CNPJ (ou CEP para buscar endereço)</label>
+          <input id="document_number" name="document_number" type="text" value={formData.document_number} onChange={handleChange} onBlur={handleCepBlur} />
         </div>
         <div className={styles.formGroup}>
           <label>Tipo de Entidade</label>
@@ -126,7 +142,7 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
       </div>
       
       <div className={styles.formGroup}>
-          <label>Endereço</label>
+          <label>Endereço {cepLoading && '(A procurar...)'}</label>
           <input id="address" name="address" type="text" value={formData.address} onChange={handleChange} />
       </div>
 

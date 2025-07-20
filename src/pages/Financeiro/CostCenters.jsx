@@ -1,6 +1,6 @@
 // src/pages/Financeiro/CostCenters.jsx
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { FaPlus, FaEdit } from 'react-icons/fa';
 import Card from '../../components/Card/Card';
@@ -11,35 +11,19 @@ import CostCenterForm from '../../components/CostCenterForm/CostCenterForm';
 import ToggleSwitch from '../../components/ToggleSwitch/ToggleSwitch';
 import Pagination from '../../components/Pagination/Pagination';
 import { useNotify } from '../../hooks/useNotify';
+import { useCostCenters } from '../../hooks/useCostCenters'; // <-- NOSSO NOVO HOOK!
 
 const ITEMS_PER_PAGE = 10;
 
 const CostCenters = () => {
-  const [costCenters, setCostCenters] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // --- LÓGICA DE DADOS DO HOOK ---
+  const { costCenters, loading, fetchCostCenters } = useCostCenters();
+
+  // --- ESTADOS LOCAIS DO COMPONENTE (UI) ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCostCenter, setEditingCostCenter] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const notify = useNotify();
-
-  const fetchCostCenters = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_cost_centers');
-      if (error) throw error;
-      setCostCenters(data || []);
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível carregar os centros de custo.');
-    } finally {
-      setLoading(false);
-    }
-  }, []); //CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
-
-
-
-  useEffect(() => {
-    fetchCostCenters();
-  }, [fetchCostCenters]);
 
   const currentTableData = useMemo(() => {
     const firstPageIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -51,10 +35,11 @@ const CostCenters = () => {
     try {
       const updatePayload = { is_active: newStatus, finalization_date: newStatus ? null : new Date().toISOString() };
       await supabase.from('cost_centers').update(updatePayload).eq('id', id);
-      setCostCenters(current => current.map(cc => cc.id === id ? { ...cc, ...updatePayload } : cc));
+      fetchCostCenters(); // Recarrega os dados
       notify.success('Status atualizado!');
     } catch (error) {
-      notify.error('Falha ao atualizar o status.');
+      // CORREÇÃO: Utiliza a mensagem de erro da variável 'error'.
+      notify.error(error.message || 'Falha ao atualizar o status.');
     }
   };
 

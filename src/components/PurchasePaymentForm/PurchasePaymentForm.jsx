@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import Button from '../Button/Button';
+import Modal from '../Modal/Modal'; // Importar o Modal
 import styles from './PurchasePaymentForm.module.css';
 import { FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 
@@ -14,6 +15,11 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
   const [listLoading, setListLoading] = useState(true);
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [editingAmount, setEditingAmount] = useState('');
+  
+  // --- NOVOS ESTADOS PARA O MODAL DE CONFIRMAÇÃO ---
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState(null);
+
   const notify = useNotify();
 
   useEffect(() => {
@@ -28,8 +34,8 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
         
         if (error) throw error;
         setPayments(data || []);
-      } catch (error) {
-        notify.error("Não foi possível carregar os pagamentos existentes.");
+      } catch (err) { // CORREÇÃO: Usamos 'err' para evitar o aviso de variável não utilizada.
+        notify.error(err.message || "Não foi possível carregar os pagamentos existentes.");
       } finally {
         setListLoading(false);
       }
@@ -38,7 +44,7 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
     if (purchase.id) {
         fetchPayments();
     }
-  }, [purchase.id]);
+  }, [purchase.id, notify]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,16 +71,24 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
     }
   };
 
-  const handleDeletePayment = async (paymentId) => {
-    if (window.confirm('Tem a certeza que quer apagar este pagamento?')) {
-      try {
-        const { error } = await supabase.from('purchase_payments').delete().eq('id', paymentId);
-        if (error) throw error;
-        notify.success('Pagamento apagado com sucesso!');
-        if (onSuccess) onSuccess();
-      } catch (error) {
-        notify.error(error.message || 'Falha ao apagar o pagamento.');
-      }
+  // --- LÓGICA DE EXCLUSÃO ATUALIZADA ---
+  const handleDeletePayment = (paymentId) => {
+    setPaymentToDelete(paymentId);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDeletePayment = async () => {
+    if (!paymentToDelete) return;
+    try {
+      const { error } = await supabase.from('purchase_payments').delete().eq('id', paymentToDelete);
+      if (error) throw error;
+      notify.success('Pagamento apagado com sucesso!');
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      notify.error(error.message || 'Falha ao apagar o pagamento.');
+    } finally {
+      setIsConfirmModalOpen(false);
+      setPaymentToDelete(null);
     }
   };
 
@@ -166,6 +180,17 @@ const PurchasePaymentForm = ({ purchase, onSuccess }) => {
           <p className={styles.noPayments}>Nenhum pagamento registado para esta compra.</p>
         )}
       </div>
+
+      {/* --- NOVO MODAL DE CONFIRMAÇÃO --- */}
+      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Confirmar Exclusão">
+        <div>
+          <p>Tem a certeza que quer apagar este pagamento? Esta ação não pode ser desfeita.</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+            <Button variant="ghost" onClick={() => setIsConfirmModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDeletePayment}>Apagar</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -1,7 +1,6 @@
 // src/pages/Compras.jsx
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState, useMemo } from 'react';
 import { FaPlus, FaMoneyBillWave } from 'react-icons/fa';
 import Card from '../components/Card/Card';
 import Table from '../components/Table/Table';
@@ -11,63 +10,36 @@ import PurchaseForm from '../components/PurchaseForm/PurchaseForm';
 import PurchasePaymentForm from '../components/PurchasePaymentForm/PurchasePaymentForm';
 import ProgressBar from '../components/ProgressBar/ProgressBar';
 import Pagination from '../components/Pagination/Pagination';
-import { useNotify } from '../hooks/useNotify';
+import { useCompras } from '../hooks/useCompras'; // <-- NOSSO NOVO HOOK!
 import styles from './Compras.module.css';
 
 const ITEMS_PER_PAGE = 10;
 
 const Compras = () => {
-  // --- ESTADOS DO COMPONENTE ---
-  const [purchases, setPurchases] = useState([]); // Guarda a lista COMPLETA de compras
-  const [loading, setLoading] = useState(true);
+  // --- A LÓGICA DE DADOS AGORA VEM DO NOSSO HOOK ---
+  const { compras, loading, fetchCompras } = useCompras();
+
+  // --- ESTADOS LOCAIS DO COMPONENTE (apenas para UI) ---
   const [sortConfig, setSortConfig] = useState({ key: 'purchase_date', direction: 'descending' });
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const notify = useNotify();
 
-  // --- ESTADOS PARA OS FILTROS (ATUALIZADOS) ---
-  // Trocamos os IDs por strings para a busca por nome
+  // --- ESTADOS PARA OS FILTROS ---
   const [filterSupplierName, setFilterSupplierName] = useState('');
   const [filterCostCenterName, setFilterCostCenterName] = useState('');
   const [filterPaymentStatus, setFilterPaymentStatus] = useState('');
 
-  // --- LÓGICA DE DADOS ---
-
-  // CORREÇÃO DO LOOP: A função para buscar os dados agora é mais simples
-  // e o useCallback tem uma dependência vazia, garantindo que não seja recriado.
-  const fetchPurchases = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_purchases_with_payment_status');
-      if (error) throw error;
-      setPurchases(data || []);
-    } catch (error) {
-      // O notify é chamado aqui, mas como não está na dependência do useCallback, não causa o loop.
-      notify.error(error.message || 'Não foi possível carregar as compras.');
-    } finally {
-      setLoading(false);
-    }
-  }, []); // O array de dependências vazio quebra o ciclo de requisições.
-
-  // Este useEffect agora só chama a função de busca uma vez, quando a página carrega.
-  useEffect(() => {
-    fetchPurchases();
-  }, [fetchPurchases]);
-
-  // LÓGICA DE FILTRAGEM ATUALIZADA
+  // LÓGICA DE FILTRAGEM E ORDENAÇÃO
   const filteredPurchases = useMemo(() => {
-    return purchases
-      // Filtra por nome do fornecedor (insensível a maiúsculas/minúsculas)
+    return compras
       .filter(purchase => 
         filterSupplierName ? purchase.supplier_name.toLowerCase().includes(filterSupplierName.toLowerCase()) : true
       )
-      // Filtra por nome do centro de custo
       .filter(purchase => 
         filterCostCenterName ? purchase.cost_center_name.toLowerCase().includes(filterCostCenterName.toLowerCase()) : true
       )
-      // Filtra por status de pagamento
       .filter(purchase => {
         if (!filterPaymentStatus) return true;
         const balance = purchase.balance;
@@ -76,7 +48,7 @@ const Compras = () => {
         if (filterPaymentStatus === 'nao_pago') return purchase.total_paid === 0;
         return true;
       });
-  }, [purchases, filterSupplierName, filterCostCenterName, filterPaymentStatus]);
+  }, [compras, filterSupplierName, filterCostCenterName, filterPaymentStatus]);
 
   const sortedPurchases = useMemo(() => {
     let sortableItems = [...filteredPurchases];
@@ -97,7 +69,6 @@ const Compras = () => {
   }, [currentPage, sortedPurchases]);
 
   // --- MANIPULADORES DE EVENTOS ---
-
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -108,7 +79,7 @@ const Compras = () => {
   };
 
   const handleSuccess = () => {
-    fetchPurchases();
+    fetchCompras();
     setIsPurchaseModalOpen(false);
     setIsPaymentModalOpen(false);
   };
@@ -125,7 +96,6 @@ const Compras = () => {
     { header: 'Ações', key: 'actions', sortable: false, Cell: ({ row }) => (<Button icon={FaMoneyBillWave} onClick={() => openPaymentModal(row)} isIconOnly>Ver Pagamentos</Button>) },
   ];
 
-  // --- RENDERIZAÇÃO DO COMPONENTE ---
   return (
     <div>
       <div className={styles.header}>
@@ -133,7 +103,6 @@ const Compras = () => {
         <Button icon={FaPlus} onClick={() => setIsPurchaseModalOpen(true)}>Nova Compra</Button>
       </div>
       
-      {/* FILTROS ATUALIZADOS */}
       <Card className={styles.filterCard}>
         <input 
           type="text"

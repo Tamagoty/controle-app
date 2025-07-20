@@ -1,42 +1,25 @@
 // src/pages/Relatorios/RelatorioFinanceiro.jsx
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import React, { useState, useEffect } from 'react';
 import Card from '../../components/Card/Card';
 import Table from '../../components/Table/Table';
 import StatCard from '../../components/StatCard/StatCard';
-import { useNotify } from '../../hooks/useNotify';
+import { useRelatorioFinanceiro } from '../../hooks/useRelatorioFinanceiro'; // <-- NOSSO NOVO HOOK!
 import styles from './RelatorioFinanceiro.module.css';
 
 const RelatorioFinanceiro = () => {
-  const [reportData, setReportData] = useState({ summary: {}, transactions: [] });
-  const [loading, setLoading] = useState(true);
   const [dates, setDates] = useState({
-    start: new Date(new Date().setDate(1)).toISOString().split('T')[0], // Primeiro dia do mês atual
-    end: new Date().toISOString().split('T')[0], // Hoje
+    start: new Date(new Date().setDate(1)).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0],
   });
-  const notify = useNotify();
 
-  // A CORREÇÃO ESTÁ AQUI: 'notify' foi removido das dependências do useCallback.
-  const fetchReport = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_financial_report', {
-        p_start_date: dates.start,
-        p_end_date: dates.end,
-      });
-      if (error) throw error;
-      setReportData(data || { summary: {}, transactions: [] });
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível gerar o relatório.');
-    } finally {
-      setLoading(false);
-    }
-  }, [dates]); // A dependência agora é apenas 'dates', que só muda com a interação do utilizador.
+  // --- LÓGICA DE DADOS DO HOOK ---
+  const { reportData, loading, fetchReport } = useRelatorioFinanceiro(dates);
 
+  // Efeito para buscar novos dados quando as datas mudam
   useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
+    fetchReport(dates);
+  }, [dates, fetchReport]);
 
   const handleDateChange = (e) => {
     const { name, value } = e.target;
@@ -54,7 +37,7 @@ const RelatorioFinanceiro = () => {
     { header: 'Valor', key: 'amount', Cell: ({ row }) => formatCurrency(row.amount)},
   ];
   
-  const sortedTransactions = [...reportData.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortedTransactions = [...(reportData.transactions || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
     <div>

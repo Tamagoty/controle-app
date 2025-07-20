@@ -1,6 +1,6 @@
 // src/pages/Produtos.jsx
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import { FaPlus, FaEdit, FaWarehouse } from "react-icons/fa";
@@ -13,14 +13,16 @@ import StockAdjustmentForm from "../components/StockAdjustmentForm/StockAdjustme
 import ToggleSwitch from "../components/ToggleSwitch/ToggleSwitch";
 import Pagination from "../components/Pagination/Pagination";
 import { useNotify } from "../hooks/useNotify";
+import { useProdutos } from "../hooks/useProdutos"; // <-- NOSSO NOVO HOOK!
 import styles from "./Produtos.module.css";
 
 const ITEMS_PER_PAGE = 10;
 
 const Produtos = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // --- LÓGICA DE DADOS DO HOOK ---
+  const { products, categories, loading, fetchProducts } = useProdutos();
+  
+  // --- ESTADOS LOCAIS DO COMPONENTE (UI) ---
   const [sortConfig, setSortConfig] = useState({ key: "name", direction: "ascending" });
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
@@ -33,29 +35,6 @@ const Produtos = () => {
   const { role } = useAuth();
 
   const canManage = role === "admin" || role === "gestor";
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc("get_products_with_details");
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      notify.error("Não foi possível carregar os produtos.");
-    } finally {
-      setLoading(false);
-    }
-  }, []); // CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const { data } = await supabase.from('product_categories').select('id, name');
-      setCategories(data || []);
-    };
-    
-    fetchProducts();
-    fetchCategories();
-  }, [fetchProducts]);
 
   const filteredProducts = useMemo(() => {
     return products
@@ -97,10 +76,11 @@ const Produtos = () => {
   const handleStatusChange = async (productId, newStatus) => {
     try {
       await supabase.from("products").update({ is_active: newStatus }).eq("id", productId);
-      setProducts((current) => current.map((p) => (p.id === productId ? { ...p, is_active: newStatus } : p)));
+      fetchProducts(); // Recarrega os dados para refletir a mudança
       notify.success("Status atualizado!");
-    } catch (error) {
-      notify.error("Falha ao atualizar o status.");
+    } catch (err) {
+      // CORREÇÃO: Utiliza a mensagem de erro da variável 'err'.
+      notify.error(err.message || "Falha ao atualizar o status.");
     }
   };
 

@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { FaUsersCog } from 'react-icons/fa';
+import { FaUsersCog, FaUserPlus } from 'react-icons/fa';
 import Card from '../../components/Card/Card';
 import Table from '../../components/Table/Table';
 import Button from '../../components/Button/Button';
 import Modal from '../../components/Modal/Modal';
 import UserRoleForm from '../../components/UserRoleForm/UserRoleForm';
+import InviteUserForm from '../../components/InviteUserForm/InviteUserForm'; // <-- NOVO
 import Pagination from '../../components/Pagination/Pagination';
 import { useNotify } from '../../hooks/useNotify';
 
@@ -16,7 +17,8 @@ const ITEMS_PER_PAGE = 10;
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false); // <-- NOVO
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const notify = useNotify();
@@ -32,9 +34,7 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, []); //CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
-
-
+  }, [notify]);
 
   useEffect(() => {
     fetchUsers();
@@ -46,26 +46,29 @@ const UserManagement = () => {
     return users.slice(firstPageIndex, lastPageIndex);
   }, [currentPage, users]);
 
-  const handleOpenModal = (user) => {
+  const handleOpenRoleModal = (user) => {
     setSelectedUser(user);
-    setIsModalOpen(true);
+    setIsRoleModalOpen(true);
   };
 
   const handleSuccess = () => {
     fetchUsers();
-    setIsModalOpen(false);
+    setIsRoleModalOpen(false);
+    setIsInviteModalOpen(false);
   };
 
   const columns = [
     { header: 'Email', key: 'email', accessor: 'email' },
     { header: 'Papel', key: 'role', Cell: ({ row }) => row.role ? <span style={{textTransform: 'capitalize'}}>{row.role}</span> : <span style={{color: 'var(--color-text-secondary)'}}>Não atribuído</span> },
-    { header: 'Ações', key: 'actions', Cell: ({ row }) => ( <Button icon={FaUsersCog} isIconOnly onClick={() => handleOpenModal(row)}>Gerir Papel</Button> ) },
+    { header: 'Ações', key: 'actions', Cell: ({ row }) => ( <Button icon={FaUsersCog} isIconOnly onClick={() => handleOpenRoleModal(row)}>Gerir Papel</Button> ) },
   ];
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
         <h1>Gestão de Utilizadores</h1>
+        {/* NOVO BOTÃO DE CONVITE */}
+        <Button icon={FaUserPlus} onClick={() => setIsInviteModalOpen(true)}>Convidar Utilizador</Button>
       </div>
       
       <Card>
@@ -78,10 +81,15 @@ const UserManagement = () => {
       </Card>
 
       {selectedUser && (
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Gerir Papel do Utilizador">
+        <Modal isOpen={isRoleModalOpen} onClose={() => setIsRoleModalOpen(false)} title="Gerir Papel do Utilizador">
           <UserRoleForm user={selectedUser} onSuccess={handleSuccess} />
         </Modal>
       )}
+
+      {/* NOVO MODAL DE CONVITE */}
+      <Modal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} title="Convidar Novo Utilizador">
+        <InviteUserForm onSuccess={handleSuccess} />
+      </Modal>
     </div>
   );
 };

@@ -10,6 +10,7 @@ const CostCenterForm = ({ costCenterToEdit, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    created_at: new Date().toISOString().split('T')[0], // Campo novo
   });
   const [loading, setLoading] = useState(false);
   const notify = useNotify();
@@ -20,6 +21,7 @@ const CostCenterForm = ({ costCenterToEdit, onSuccess }) => {
       setFormData({
         name: costCenterToEdit.name || '',
         description: costCenterToEdit.description || '',
+        created_at: new Date(costCenterToEdit.created_at).toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
       });
     }
   }, [costCenterToEdit, isEditing]);
@@ -33,10 +35,16 @@ const CostCenterForm = ({ costCenterToEdit, onSuccess }) => {
     e.preventDefault();
     setLoading(true);
 
+    // Apenas enviamos os campos que podem ser alterados/inseridos
     const payload = {
       name: formData.name,
       description: formData.description,
     };
+    
+    // Se for um novo registo, incluímos a data de criação
+    if (!isEditing) {
+        payload.created_at = formData.created_at;
+    }
 
     try {
       let error;
@@ -64,6 +72,11 @@ const CostCenterForm = ({ costCenterToEdit, onSuccess }) => {
       <div className={styles.formGroup}>
         <label htmlFor="description">Descrição</label>
         <textarea id="description" name="description" value={formData.description} onChange={handleChange} />
+      </div>
+      {/* NOVO CAMPO DE DATA */}
+      <div className={styles.formGroup}>
+        <label htmlFor="created_at">Data de Criação</label>
+        <input id="created_at" name="created_at" type="date" value={formData.created_at} onChange={handleChange} required disabled={isEditing} />
       </div>
       <div className={styles.formActions}>
         <Button type="submit" disabled={loading}>

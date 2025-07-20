@@ -1,41 +1,23 @@
 // src/pages/Relatorios/RelatorioProdutos.jsx
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../../components/Card/Card';
 import ProductReportCard from '../../components/ProductReportCard/ProductReportCard';
-import { useNotify } from '../../hooks/useNotify';
+import { useRelatorioProdutos } from '../../hooks/useRelatorioProdutos'; // <-- NOSSO NOVO HOOK!
 import styles from './RelatorioProdutos.module.css';
 
 const RelatorioProdutos = () => {
-  const [reportData, setReportData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [dates, setDates] = useState({
     start: new Date(new Date().setDate(1)).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
   });
+  
+  const { reportData, loading, fetchReport } = useRelatorioProdutos(dates);
   const [searchTerm, setSearchTerm] = useState('');
-  const notify = useNotify();
-
-  const fetchReport = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_product_sales_report', {
-        p_start_date: dates.start,
-        p_end_date: dates.end,
-      });
-      if (error) throw error;
-      setReportData(data || []);
-    } catch (error) {
-      notify.error(error.message || 'Não foi possível gerar o relatório.');
-    } finally {
-      setLoading(false);
-    }
-  }, [dates]);
 
   useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
+    fetchReport(dates);
+  }, [dates, fetchReport]);
 
   const filteredData = useMemo(() => {
     return reportData.filter(product =>
@@ -65,13 +47,17 @@ const RelatorioProdutos = () => {
 
       {loading ? <p>A gerar relatório...</p> : (
         <div className={styles.reportContainer}>
-          {filteredData.map(productSummary => (
-            <ProductReportCard 
-              key={productSummary.product_id}
-              productSummary={productSummary}
-              dates={dates}
-            />
-          ))}
+          {filteredData.length > 0 ? (
+            filteredData.map(productSummary => (
+              <ProductReportCard 
+                key={productSummary.product_id}
+                productSummary={productSummary}
+                dates={dates}
+              />
+            ))
+          ) : (
+            <p>Nenhum dado encontrado para o período selecionado.</p>
+          )}
         </div>
       )}
     </div>

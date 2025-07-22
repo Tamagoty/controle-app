@@ -1,0 +1,53 @@
+/* src/components/Header/Header.module.css */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background-color: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 900;
+}
+
+.hamburgerButton {
+    display: none; /* Oculto por defeito, visível apenas em ecrãs pequenos */
+    background: none;
+    border: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-left: auto; /* Alinha à direita */
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--color-border);
+}
+
+.avatarPlaceholder {
+    font-size: 32px;
+    color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+    .hamburgerButton {
+        display: block;
+    }
+    .userInfo {
+        /* Esconde o email em ecrãs pequenos para poupar espaço */
+        & > span {
+            display: none;
+        }
+    }
+}

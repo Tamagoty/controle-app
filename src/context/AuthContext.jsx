@@ -1,60 +1,70 @@
 // src/context/AuthContext.jsx
 
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+const defaultProfile = {
+  role: null,
+  avatar_url: null,
+  media_settings: { image_quality: 0.6, max_size_mb: 1, max_width_or_height: 1920 }
+};
+
+// O componente agora não é exportado diretamente aqui
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
+  const [profile, setProfile] = useState(defaultProfile);
   const [loading, setLoading] = useState(true);
 
-  const loadUserSession = async (session) => {
+  const loadUserSession = useCallback(async (session) => {
     const currentUser = session?.user ?? null;
     setUser(currentUser);
 
     if (currentUser) {
       try {
-        const { data: roleData, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', currentUser.id)
-          .single();
+        const [roleResponse, profileResponse] = await Promise.all([
+          supabase.from('user_roles').select('role').eq('user_id', currentUser.id).single(),
+          supabase.from('user_profiles').select('avatar_url, media_settings').eq('user_id', currentUser.id).single()
+        ]);
 
-        if (error) throw error;
+        const { data: roleData, error: roleError } = roleResponse;
+        const { data: profileData, error: profileError } = profileResponse;
 
-        setUserRole(roleData?.role || null);
+        if (roleError && roleError.code !== 'PGRST116') throw roleError;
+        if (profileError && profileError.code !== 'PGRST116') throw profileError;
+
+        setProfile({
+          role: roleData?.role || null,
+          avatar_url: profileData?.avatar_url || null,
+          media_settings: { ...defaultProfile.media_settings, ...profileData?.media_settings }
+        });
+
       } catch (error) {
-        console.error("Erro ao buscar papel do usuário:", error);
-        setUserRole(null);
+        console.error("Erro ao buscar perfil do utilizador:", error);
+        setProfile(defaultProfile);
       }
     } else {
-      setUserRole(null);
+      setProfile(defaultProfile);
     }
-  };
+  }, []);
 
- useEffect(() => {
-  const init = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    await loadUserSession(session);
-    setLoading(false);
-  };
-
-  // Aguarda 300ms antes de iniciar — dá tempo para o Supabase restaurar a sessão
-  const timeout = setTimeout(() => {
+  useEffect(() => {
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      await loadUserSession(session);
+      setLoading(false);
+    };
     init();
-  }, 300);
 
-  const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-    loadUserSession(session);
-  });
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadUserSession(session);
+    });
 
-  return () => {
-    clearTimeout(timeout);
-    authListener.subscription.unsubscribe();
-  };
-}, []);
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [loadUserSession]);
 
   const value = {
     signIn: (data) => supabase.auth.signInWithPassword(data),
@@ -63,17 +73,25 @@ export const AuthProvider = ({ children }) => {
       window.location.replace('/login');
     },
     user,
-    role: userRole,
+    profile,
     loading,
+    refreshUserProfile: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        await loadUserSession(session);
+    },
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+
+// Adicionamos o AuthProvider como a exportação default do ficheiro
+export default AuthProvider;

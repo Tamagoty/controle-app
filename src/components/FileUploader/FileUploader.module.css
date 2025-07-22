@@ -65,18 +65,11 @@
     align-items: center;
     gap: var(--spacing-md);
     word-break: break-all;
-    cursor: pointer; /* Torna o nome do ficheiro clicável */
-    color: var(--color-text-primary);
-    text-decoration: none;
-    transition: color var(--transition-speed);
 }
 
-.fileInfo:hover {
-    color: var(--color-primary);
-}
-
-.externalLinkIcon {
-    font-size: 0.8em;
-    color: var(--color-text-secondary);
-    margin-left: var(--spacing-sm);
+/* NOVO: Container para os botões de ação */
+.fileActions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-shrink: 0; /* Impede que os botões encolham */
 }

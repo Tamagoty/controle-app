@@ -6,11 +6,12 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotify } from '../../hooks/useNotify';
 import imageCompression from 'browser-image-compression';
 import styles from './FileUploader.module.css';
-import { FaFileUpload, FaTrash, FaSpinner, FaFilePdf, FaFileImage, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaFileUpload, FaTrash, FaSpinner, FaFilePdf, FaFileImage, FaEye } from 'react-icons/fa';
 import Button from '../Button/Button';
-import Modal from '../Modal/Modal'; // Importar o Modal
+import Modal from '../Modal/Modal';
+import AttachmentViewer from '../AttachmentViewer/AttachmentViewer'; // <-- NOVO
 
-const MAX_FILE_SIZE_MB = 5;
+const MAX_INITIAL_FILE_SIZE_MB = 10;
 
 const FileUploader = ({ recordId, recordType }) => {
   const [attachments, setAttachments] = useState([]);
@@ -18,7 +19,9 @@ const FileUploader = ({ recordId, recordType }) => {
   const [loading, setLoading] = useState(true);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
-  const { user } = useAuth();
+  const [isViewerOpen, setIsViewerOpen] = useState(false); // <-- NOVO
+  const [fileToView, setFileToView] = useState(null);       // <-- NOVO
+  const { user, profile } = useAuth();
   const notify = useNotify();
 
   const fetchAttachments = useCallback(async () => {
@@ -46,21 +49,26 @@ const FileUploader = ({ recordId, recordType }) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      notify.error(`O ficheiro é demasiado grande. O máximo é ${MAX_FILE_SIZE_MB}MB.`);
+    if (file.size > MAX_INITIAL_FILE_SIZE_MB * 1024 * 1024) {
+      notify.error(`O ficheiro é demasiado grande. O máximo permitido é ${MAX_INITIAL_FILE_SIZE_MB}MB.`);
       return;
     }
 
     setUploading(true);
     try {
       let fileToUpload = file;
+      
       if (file.type.startsWith('image/')) {
+        const { image_quality, max_size_mb, max_width_or_height } = profile.media_settings;
+        
         const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
+          maxSizeMB: max_size_mb,
+          maxWidthOrHeight: max_width_or_height,
           useWebWorker: true,
-          initialQuality: 0.6
+          initialQuality: image_quality
         };
+        
+        notify.info('A comprimir a imagem...');
         fileToUpload = await imageCompression(file, options);
       }
 
@@ -89,7 +97,14 @@ const FileUploader = ({ recordId, recordType }) => {
         .createSignedUrl(filePath, 300);
       
       if (error) throw error;
-      window.open(data.signedUrl, '_blank');
+      
+      // Abre o modal em vez de uma nova janela
+      setFileToView({
+        url: data.signedUrl,
+        name: getFileName(filePath)
+      });
+      setIsViewerOpen(true);
+
     } catch (err) {
       notify.error(err.message || 'Não foi possível obter o link do ficheiro.');
     }
@@ -140,12 +155,14 @@ const FileUploader = ({ recordId, recordType }) => {
         <ul className={styles.fileList}>
           {attachments.map(file => (
             <li key={file.id}>
-              <a onClick={() => handleViewFile(file.file_path)} className={styles.fileInfo} title="Ver ficheiro">
+              <div className={styles.fileInfo}>
                 {file.file_path.endsWith('.pdf') ? <FaFilePdf /> : <FaFileImage />}
                 <span>{getFileName(file.file_path)}</span>
-                <FaExternalLinkAlt className={styles.externalLinkIcon} />
-              </a>
-              <Button icon={FaTrash} variant="danger" isIconOnly onClick={() => handleDelete(file.file_path)}>Apagar</Button>
+              </div>
+              <div className={styles.fileActions}>
+                <Button icon={FaEye} variant="ghost" isIconOnly onClick={() => handleViewFile(file.file_path)}>Ver</Button>
+                <Button icon={FaTrash} variant="danger" isIconOnly onClick={() => handleDelete(file.file_path)}>Apagar</Button>
+              </div>
             </li>
           ))}
         </ul>
@@ -160,6 +177,14 @@ const FileUploader = ({ recordId, recordType }) => {
           </div>
         </div>
       </Modal>
+
+      {/* NOVO MODAL DE VISUALIZAÇÃO */}
+      <AttachmentViewer 
+        isOpen={isViewerOpen}
+        onClose={() => setIsViewerOpen(false)}
+        fileUrl={fileToView?.url}
+        fileName={fileToView?.name}
+      />
     </div>
   );
 };

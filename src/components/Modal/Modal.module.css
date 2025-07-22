@@ -1,6 +1,5 @@
 /* src/components/Modal/Modal.module.css */
 
-/* O fundo escurecido que cobre a página */
 .backdrop {
   position: fixed;
   top: 0;
@@ -11,23 +10,34 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000; /* Garante que fique acima de tudo */
+  z-index: 2000;
   padding: var(--spacing-md);
 }
 
-/* O container branco do conteúdo do modal */
 .modalContent {
   width: 100%;
-  max-width: 500px; /* Largura máxima do modal */
   background-color: var(--color-bg-secondary);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  max-height: 90vh; /* Altura máxima para não ocupar a tela toda */
+  max-height: 90vh;
 }
 
-/* Cabeçalho do modal */
+/* --- NOVAS CLASSES DE TAMANHO --- */
+.md {
+  max-width: 500px; /* Padrão */
+}
+
+.lg {
+  max-width: 800px;
+}
+
+.xl {
+  max-width: 1140px; /* Tamanho grande para visualizadores */
+}
+/* -------------------------------- */
+
 .modalHeader {
   display: flex;
   justify-content: space-between;
@@ -38,28 +48,19 @@
 
 .modalTitle {
   font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--color-text-primary);
   margin: 0;
 }
 
 .closeButton {
   background: none;
   border: none;
-  font-size: 1.5rem;
-  font-weight: bold;
   color: var(--color-text-secondary);
+  font-size: 2rem;
   cursor: pointer;
-  padding: 0;
   line-height: 1;
 }
 
-.closeButton:hover {
-  color: var(--color-text-primary);
-}
-
-/* Corpo do modal, onde o conteúdo (formulário) vai ficar */
 .modalBody {
   padding: var(--spacing-lg);
-  overflow-y: auto; /* Adiciona scroll se o conteúdo for muito grande */
+  overflow-y: auto;
 }

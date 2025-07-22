@@ -1,5 +1,11 @@
 /* src/pages/Configuracoes/MeuPerfil.module.css */
 
+.profileGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-lg);
+}
+
 .sectionCard {
     margin-bottom: var(--spacing-lg);
 }
@@ -13,7 +19,7 @@
 
 .infoGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: 1fr;
     gap: var(--spacing-lg);
 }
 
@@ -33,4 +39,10 @@
     text-transform: capitalize;
     font-weight: bold !important;
     color: var(--color-primary);
+}
+
+@media (max-width: 900px) {
+    .profileGrid {
+        grid-template-columns: 1fr;
+    }
 }

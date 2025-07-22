@@ -10,13 +10,15 @@ import styles from './PurchaseForm.module.css';
 import paymentStyles from '../PaymentSection.module.css';
 import Button from '../Button/Button';
 import ToggleSwitch from '../ToggleSwitch/ToggleSwitch';
+import CurrencyInput from '../CurrencyInput/CurrencyInput';
 import { FaThumbtack } from 'react-icons/fa';
 
 const PurchaseForm = ({ onSuccess }) => {
   const { sessionDefaults, updateDefault } = useSessionDefaults();
   const [supplierId, setSupplierId] = useState('');
   const [costCenterId, setCostCenterId] = useState(sessionDefaults.costCenterId || '');
-  const [items, setItems] = useState([{ product_id: '', quantity: 1, unit_price: '' }]);
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+  const [items, setItems] = useState([{ product_id: '', quantity: 1, unit_price: 0 }]);
   const [suppliers, setSuppliers] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
   const [products, setProducts] = useState([]);
@@ -25,7 +27,8 @@ const PurchaseForm = ({ onSuccess }) => {
   const { user } = useAuth();
 
   const [addPayment, setAddPayment] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [attachmentFile, setAttachmentFile] = useState(null);
 
   useEffect(() => {
@@ -46,9 +49,9 @@ const PurchaseForm = ({ onSuccess }) => {
 
   useEffect(() => {
     if (addPayment) {
-        setPaymentAmount(totalAmount.toFixed(2));
+        setPaymentAmount(totalAmount);
     } else {
-        setPaymentAmount('');
+        setPaymentAmount(0);
     }
   }, [addPayment, totalAmount]);
 
@@ -65,7 +68,7 @@ const PurchaseForm = ({ onSuccess }) => {
     setItems(newItems);
   };
 
-  const addItem = () => setItems([...items, { product_id: '', quantity: 1, unit_price: '' }]);
+  const addItem = () => setItems([...items, { product_id: '', quantity: 1, unit_price: 0 }]);
   const removeItem = (index) => setItems(items.filter((_, i) => i !== index));
   const handleFileChange = (e) => setAttachmentFile(e.target.files[0]);
 
@@ -81,11 +84,17 @@ const PurchaseForm = ({ onSuccess }) => {
     }));
 
     try {
+      // CORREÇÃO: Converte as datas para o formato ISO completo para evitar problemas de fuso horário.
+      const purchaseTimestamp = new Date(`${purchaseDate}T00:00:00`).toISOString();
+      const paymentTimestamp = addPayment ? new Date(`${paymentDate}T00:00:00`).toISOString() : new Date().toISOString();
+
       const { data: purchaseData, error } = await supabase.rpc('create_purchase_with_details', {
         supplier_id_param: supplierId,
         cost_center_id_param: costCenterId,
         items_param: itemsPayload,
-        payment_amount_param: addPayment ? parseFloat(paymentAmount) : 0
+        purchase_date_param: purchaseTimestamp,
+        payment_amount_param: addPayment ? paymentAmount : 0,
+        payment_date_param: paymentTimestamp
       });
       if (error) throw error;
       const newPurchaseId = purchaseData.id;
@@ -124,6 +133,10 @@ const PurchaseForm = ({ onSuccess }) => {
           </select>
         </div>
         <div className={styles.formGroup}>
+          <label htmlFor="purchaseDate">Data da Compra</label>
+          <input id="purchaseDate" type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} required className={styles.input} />
+        </div>
+        <div className={styles.formGroup}>
           <label htmlFor="cost_center" className={styles.labelWithIcon}>
             Centro de Custo
             {sessionDefaults.costCenterId && <FaThumbtack title="Valor padrão da sessão" />}
@@ -148,11 +161,11 @@ const PurchaseForm = ({ onSuccess }) => {
             </div>
             <div className={`${styles.formGroup} ${styles.quantityGroup}`}>
               <label>Quantidade</label>
-              <input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required className={styles.input} step="any" min="0.01"/>
+              <input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required className={styles.input} step="0.001" min="0.001"/>
             </div>
             <div className={`${styles.formGroup} ${styles.priceGroup}`}>
               <label>Preço Unit.</label>
-              <input type="number" step="0.01" value={item.unit_price} onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)} required className={styles.input} min="0"/>
+              <CurrencyInput value={item.unit_price} onChange={(value) => handleItemChange(index, 'unit_price', value)} />
             </div>
             <Button type="button" variant="danger" isIconOnly onClick={() => removeItem(index)}>&times;</Button>
           </div>
@@ -168,7 +181,11 @@ const PurchaseForm = ({ onSuccess }) => {
             <div className={paymentStyles.paymentFields}>
                 <div className={paymentStyles.formGroup}>
                     <label htmlFor="paymentAmount">Valor Pago</label>
-                    <input id="paymentAmount" type="number" step="0.01" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} className={paymentStyles.input} />
+                    <CurrencyInput value={paymentAmount} onChange={setPaymentAmount} />
+                </div>
+                <div className={paymentStyles.formGroup}>
+                    <label htmlFor="paymentDate">Data do Pagamento</label>
+                    <input id="paymentDate" type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} required className={paymentStyles.input} />
                 </div>
                 <div className={paymentStyles.formGroup}>
                     <label htmlFor="attachment">Anexar Comprovativo</label>
@@ -180,7 +197,7 @@ const PurchaseForm = ({ onSuccess }) => {
       
       <div className={styles.footer}>
         <div className={styles.total}>
-          Total: <span>R$ {totalAmount.toFixed(2)}</span>
+          Total: <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAmount)}</span>
         </div>
         <Button type="submit" disabled={loading || !supplierId || !costCenterId || items.some(i => !i.product_id)}>
           {loading ? 'A Guardar...' : 'Guardar Compra'}

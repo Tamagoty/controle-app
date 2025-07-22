@@ -10,7 +10,7 @@ import styles from './SaleForm.module.css';
 import paymentStyles from '../PaymentSection.module.css';
 import Button from '../Button/Button';
 import ToggleSwitch from '../ToggleSwitch/ToggleSwitch';
-import CurrencyInput from '../CurrencyInput/CurrencyInput'; // <-- NOVO
+import CurrencyInput from '../CurrencyInput/CurrencyInput';
 import { FaThumbtack } from 'react-icons/fa';
 
 const SaleForm = ({ onSuccess }) => {
@@ -19,6 +19,7 @@ const SaleForm = ({ onSuccess }) => {
   const [sellerId, setSellerId] = useState(sessionDefaults.sellerId || '');
   const [costCenterId, setCostCenterId] = useState(sessionDefaults.costCenterId || '');
   const [commissionPercentage, setCommissionPercentage] = useState(sessionDefaults.commissionPercentage || 0);
+  const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
   const [items, setItems] = useState([{ product_id: '', quantity: 1, unit_price: 0 }]);
   const [clients, setClients] = useState([]);
   const [sellers, setSellers] = useState([]);
@@ -30,6 +31,7 @@ const SaleForm = ({ onSuccess }) => {
 
   const [addPayment, setAddPayment] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [attachmentFile, setAttachmentFile] = useState(null);
 
   useEffect(() => {
@@ -86,13 +88,19 @@ const SaleForm = ({ onSuccess }) => {
       unit_price: parseFloat(item.unit_price)
     }));
     try {
+      // CORREÇÃO: Converte as datas para o formato ISO completo para evitar problemas de fuso horário.
+      const saleTimestamp = new Date(`${saleDate}T00:00:00`).toISOString();
+      const paymentTimestamp = addPayment ? new Date(`${paymentDate}T00:00:00`).toISOString() : new Date().toISOString();
+
       const { data: saleData, error } = await supabase.rpc('create_sale_with_details', {
         client_id_param: clientId,
         seller_id_param: sellerId || null,
         cost_center_id_param: costCenterId,
         commission_percentage_param: parseFloat(commissionPercentage) || 0,
         items_param: itemsPayload,
-        payment_amount_param: addPayment ? paymentAmount : 0
+        sale_date_param: saleTimestamp,
+        payment_amount_param: addPayment ? paymentAmount : 0,
+        payment_date_param: paymentTimestamp
       });
       if (error) throw error;
       
@@ -131,6 +139,10 @@ const SaleForm = ({ onSuccess }) => {
             <option value="" disabled>Selecione um cliente</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label htmlFor="saleDate">Data da Venda</label>
+          <input id="saleDate" type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} required className={styles.input} />
         </div>
         <div className={styles.formGroup}>
           <label htmlFor="seller" className={styles.labelWithIcon}>
@@ -195,6 +207,10 @@ const SaleForm = ({ onSuccess }) => {
                 <div className={paymentStyles.formGroup}>
                     <label htmlFor="paymentAmount">Valor Recebido</label>
                     <CurrencyInput value={paymentAmount} onChange={setPaymentAmount} />
+                </div>
+                <div className={paymentStyles.formGroup}>
+                    <label htmlFor="paymentDate">Data do Pagamento</label>
+                    <input id="paymentDate" type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} required className={paymentStyles.input} />
                 </div>
                 <div className={paymentStyles.formGroup}>
                     <label htmlFor="attachment">Anexar Comprovativo</label>

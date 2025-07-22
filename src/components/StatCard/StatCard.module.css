@@ -1,14 +1,37 @@
 /* src/components/StatCard/StatCard.module.css */
 
 .statCard {
-  /* Efeito de destaque ao passar o rato */
   transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  padding-left: var(--spacing-lg);
+  /* Esta classe base será usada para aumentar a especificidade abaixo */
 }
 
 .statCard:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-lg);
 }
+
+/* CORREÇÃO DEFINITIVA: Aumentamos a especificidade do seletor.
+  Ao usar ".statCard.revenue", a regra só se aplica a elementos que tenham AMBAS as classes.
+  Este seletor de duas classes é mais "forte" do que o seletor de uma classe (".card")
+  do Card.module.css, garantindo que esta regra de borda seja a vencedora.
+*/
+.statCard.revenue {
+  border-left: 5px solid var(--color-success);
+}
+
+.statCard.expense {
+  border-left: 5px solid var(--color-danger);
+}
+
+.statCard.balance {
+  border-left: 5px solid var(--color-info);
+}
+
+.statCard.neutral {
+  border-left: 5px solid var(--color-text-secondary);
+}
+
 
 .title {
   font-size: var(--font-size-md);
@@ -18,7 +41,7 @@
 }
 
 .value {
-  font-size: var(--font-size-xxl);
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1.2;

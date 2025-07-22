@@ -1,6 +1,6 @@
 // src/components/EntityForm/EntityForm.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useNotify } from '../../hooks/useNotify';
 import styles from './EntityForm.module.css';
@@ -15,7 +15,7 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
     email: '',
     phone: '',
     document_number: '',
-    cep: '', // Novo campo para o CEP
+    cep: '',
     address: '',
     entity_type: 'Pessoa',
   });
@@ -23,8 +23,10 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const notify = useNotify();
-
   const isEditing = !!entityToEdit;
+
+  // Ref para o campo de endereço, para podermos focar nele
+  const addressInputRef = useRef(null);
 
   useEffect(() => {
     if (isEditing) {
@@ -33,7 +35,7 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
         email: entityToEdit.email || '',
         phone: entityToEdit.phone || '',
         document_number: entityToEdit.document_number || '',
-        cep: '', // O CEP não é guardado, é apenas para busca
+        cep: '',
         address: entityToEdit.address || '',
         entity_type: entityToEdit.entity_type || 'Pessoa',
       });
@@ -47,28 +49,31 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // --- LÓGICA DO VIACEP ---
-  const handleCepBlur = async (e) => {
+  // --- LÓGICA DO VIACEP ATUALIZADA ---
+  const handleCepChange = async (e) => {
     const cep = e.target.value.replace(/\D/g, ''); // Remove caracteres não numéricos
-    if (cep.length !== 8) {
-      return; // Só busca se tiver 8 dígitos
-    }
-    setCepLoading(true);
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      if (!response.ok) throw new Error('Falha na resposta da API.');
-      const data = await response.json();
-      if (data.erro) {
-        throw new Error('CEP não encontrado.');
+    setFormData(prev => ({ ...prev, cep: cep })); // Atualiza o campo com o valor limpo
+
+    if (cep.length === 8) { // Dispara a busca quando tiver 8 dígitos
+      setCepLoading(true);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        if (!response.ok) throw new Error('Falha na resposta da API.');
+        const data = await response.json();
+        if (data.erro) {
+          throw new Error('CEP não encontrado.');
+        }
+        setFormData(prev => ({
+          ...prev,
+          address: `${data.logradouro || ''}, ${data.bairro || ''}, ${data.localidade || ''} - ${data.uf || ''}`,
+        }));
+        // Move o cursor para o campo de endereço
+        addressInputRef.current?.focus();
+      } catch (error) {
+        notify.error(error.message || 'Falha ao buscar o CEP.');
+      } finally {
+        setCepLoading(false);
       }
-      setFormData(prev => ({
-        ...prev,
-        address: `${data.logradouro || ''}, ${data.bairro || ''}, ${data.localidade || ''} - ${data.uf || ''}`,
-      }));
-    } catch (error) {
-      notify.error(error.message || 'Falha ao buscar o CEP.');
-    } finally {
-      setCepLoading(false);
     }
   };
 
@@ -151,11 +156,11 @@ const EntityForm = ({ entityToEdit, onSuccess }) => {
             CEP
             {cepLoading && <FaSpinner className={styles.spinner} />}
           </label>
-          <input id="cep" name="cep" type="text" value={formData.cep} onChange={handleChange} onBlur={handleCepBlur} placeholder="Digite o CEP para buscar" />
+          <input id="cep" name="cep" type="text" value={formData.cep} onChange={handleCepChange} placeholder="Apenas números" maxLength="8" />
         </div>
         <div className={styles.formGroup}>
           <label>Endereço</label>
-          <input id="address" name="address" type="text" value={formData.address} onChange={handleChange} />
+          <input ref={addressInputRef} id="address" name="address" type="text" value={formData.address} onChange={handleChange} />
         </div>
       </div>
 

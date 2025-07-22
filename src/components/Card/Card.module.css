@@ -3,7 +3,13 @@
 .card {
   /* Box Model */
   padding: var(--spacing-lg);
-  border: 1px solid var(--color-border);
+  
+  /* CORREÇÃO: Usar bordas individuais em vez da propriedade 'border' */
+  /* Isto permite que outros componentes possam sobrescrever apenas uma das bordas. */
+  border-top: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
 
   /* Aparência */
   background-color: var(--color-bg-secondary);
@@ -13,11 +19,3 @@
   /* Transição para possíveis interações futuras */
   transition: box-shadow var(--transition-speed), transform var(--transition-speed);
 }
-
-/* Efeito de hover opcional, para quando o card for interativo */
-/*
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-}
-*/

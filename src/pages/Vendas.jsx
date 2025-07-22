@@ -1,7 +1,8 @@
 // src/pages/Vendas.jsx
 
 import React, { useState, useMemo } from 'react';
-import { FaPlus, FaMoneyBillWave } from 'react-icons/fa';
+import { supabase } from '../lib/supabaseClient';
+import { FaPlus, FaMoneyBillWave, FaTrash } from 'react-icons/fa'; // Adicionado FaTrash
 import Card from '../components/Card/Card';
 import Table from '../components/Table/Table';
 import Button from '../components/Button/Button';
@@ -10,27 +11,26 @@ import SaleForm from '../components/SaleForm/SaleForm';
 import SalePaymentForm from '../components/SalePaymentForm/SalePaymentForm';
 import ProgressBar from '../components/ProgressBar/ProgressBar';
 import Pagination from '../components/Pagination/Pagination';
-import { useVendas } from '../hooks/useVendas'; // <-- NOSSO NOVO HOOK!
+import { useVendas } from '../hooks/useVendas';
+import { useNotify } from '../hooks/useNotify'; // Importar useNotify
 import styles from './Vendas.module.css';
 
 const ITEMS_PER_PAGE = 10;
 
 const Vendas = () => {
-  // --- A LÓGICA DE DADOS AGORA VEM DO NOSSO HOOK ---
   const { vendas, loading, fetchVendas } = useVendas();
-
-  // --- ESTADOS LOCAIS DO COMPONENTE (apenas para UI) ---
   const [currentPage, setCurrentPage] = useState(1);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal de confirmação
   const [selectedSale, setSelectedSale] = useState(null);
+  const [saleToDelete, setSaleToDelete] = useState(null); // ID da venda a apagar
+  const notify = useNotify();
   
-  // --- ESTADOS PARA OS FILTROS ---
   const [filterClientName, setFilterClientName] = useState('');
   const [filterCostCenterName, setFilterCostCenterName] = useState('');
   const [filterPaymentStatus, setFilterPaymentStatus] = useState('');
 
-  // A lógica de filtragem continua a mesma
   const filteredSales = useMemo(() => {
     return vendas
       .filter(sale => 
@@ -55,9 +55,8 @@ const Vendas = () => {
     return filteredSales.slice(firstPageIndex, lastPageIndex);
   }, [currentPage, filteredSales]);
   
-  // --- MANIPULADORES DE EVENTOS ---
   const handleSuccess = () => {
-    fetchVendas(); // A função para recarregar os dados vem do nosso hook
+    fetchVendas();
     setIsSaleModalOpen(false);
     setIsPaymentModalOpen(false);
   };
@@ -67,14 +66,39 @@ const Vendas = () => {
     setIsPaymentModalOpen(true);
   };
 
+  // --- NOVA LÓGICA PARA APAGAR ---
+  const handleDeleteClick = (saleId) => {
+    setSaleToDelete(saleId);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!saleToDelete) return;
+    try {
+      const { error } = await supabase.rpc('delete_sale', { p_sale_id: saleToDelete });
+      if (error) throw error;
+      notify.success('Venda apagada com sucesso!');
+      fetchVendas();
+    } catch (err) {
+      notify.error(err.message || 'Não foi possível apagar a venda.');
+    } finally {
+      setIsConfirmModalOpen(false);
+      setSaleToDelete(null);
+    }
+  };
+
   const columns = [
     { header: 'Cliente / Vendedor', key: 'client_name', Cell: ({ row }) => (<div><strong>{row.client_name}</strong><div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{row.seller_name || 'Sem Vendedor'}</div></div>) },
     { header: 'Data / C. Custo', key: 'sale_date', Cell: ({ row }) => (<div><strong>{new Date(row.sale_date).toLocaleDateString()}</strong><div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{row.cost_center_name || 'Não informado'}</div></div>) },
     { header: 'Status Pagamento', key: 'balance', Cell: ({ row }) => <ProgressBar total={row.total_amount} paid={row.total_paid} /> },
-    { header: 'Ações', key: 'actions', Cell: ({ row }) => (<Button icon={FaMoneyBillWave} onClick={() => openPaymentModal(row)} isIconOnly>Ver Pagamentos</Button>) },
+    { header: 'Ações', key: 'actions', Cell: ({ row }) => (
+      <div className={styles.actionsCell}>
+        <Button icon={FaMoneyBillWave} onClick={() => openPaymentModal(row)} isIconOnly>Ver Pagamentos</Button>
+        <Button icon={FaTrash} variant="danger" onClick={() => handleDeleteClick(row.id)} isIconOnly>Apagar Venda</Button>
+      </div>
+    )},
   ];
 
-  // --- RENDERIZAÇÃO DO COMPONENTE ---
   return (
     <div>
       <div className={styles.header}>
@@ -123,6 +147,16 @@ const Vendas = () => {
           <SalePaymentForm sale={selectedSale} onSuccess={handleSuccess} />
         </Modal>
       )}
+
+      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Confirmar Exclusão">
+        <div>
+          <p>Tem a certeza que quer apagar esta venda? Todas as comissões e pagamentos associados serão removidos e o stock será devolvido. Esta ação não pode ser desfeita.</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+            <Button variant="ghost" onClick={() => setIsConfirmModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDelete}>Apagar Venda</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

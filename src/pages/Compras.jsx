@@ -1,7 +1,8 @@
 // src/pages/Compras.jsx
 
 import React, { useState, useMemo } from 'react';
-import { FaPlus, FaMoneyBillWave } from 'react-icons/fa';
+import { supabase } from '../lib/supabaseClient';
+import { FaPlus, FaMoneyBillWave, FaTrash } from 'react-icons/fa'; // Adicionado FaTrash
 import Card from '../components/Card/Card';
 import Table from '../components/Table/Table';
 import Button from '../components/Button/Button';
@@ -10,28 +11,27 @@ import PurchaseForm from '../components/PurchaseForm/PurchaseForm';
 import PurchasePaymentForm from '../components/PurchasePaymentForm/PurchasePaymentForm';
 import ProgressBar from '../components/ProgressBar/ProgressBar';
 import Pagination from '../components/Pagination/Pagination';
-import { useCompras } from '../hooks/useCompras'; // <-- NOSSO NOVO HOOK!
+import { useCompras } from '../hooks/useCompras';
+import { useNotify } from '../hooks/useNotify'; // Importar useNotify
 import styles from './Compras.module.css';
 
 const ITEMS_PER_PAGE = 10;
 
 const Compras = () => {
-  // --- A LÓGICA DE DADOS AGORA VEM DO NOSSO HOOK ---
   const { compras, loading, fetchCompras } = useCompras();
-
-  // --- ESTADOS LOCAIS DO COMPONENTE (apenas para UI) ---
   const [sortConfig, setSortConfig] = useState({ key: 'purchase_date', direction: 'descending' });
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal de confirmação
   const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [purchaseToDelete, setPurchaseToDelete] = useState(null); // ID da compra a apagar
   const [currentPage, setCurrentPage] = useState(1);
+  const notify = useNotify();
 
-  // --- ESTADOS PARA OS FILTROS ---
   const [filterSupplierName, setFilterSupplierName] = useState('');
   const [filterCostCenterName, setFilterCostCenterName] = useState('');
   const [filterPaymentStatus, setFilterPaymentStatus] = useState('');
 
-  // LÓGICA DE FILTRAGEM E ORDENAÇÃO
   const filteredPurchases = useMemo(() => {
     return compras
       .filter(purchase => 
@@ -68,7 +68,6 @@ const Compras = () => {
     return sortedPurchases.slice(firstPageIndex, lastPageIndex);
   }, [currentPage, sortedPurchases]);
 
-  // --- MANIPULADORES DE EVENTOS ---
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -89,11 +88,37 @@ const Compras = () => {
     setIsPaymentModalOpen(true);
   };
 
+  // --- NOVA LÓGICA PARA APAGAR ---
+  const handleDeleteClick = (purchaseId) => {
+    setPurchaseToDelete(purchaseId);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!purchaseToDelete) return;
+    try {
+      const { error } = await supabase.rpc('delete_purchase', { p_purchase_id: purchaseToDelete });
+      if (error) throw error;
+      notify.success('Compra apagada com sucesso!');
+      fetchCompras();
+    } catch (err) {
+      notify.error(err.message || 'Não foi possível apagar a compra.');
+    } finally {
+      setIsConfirmModalOpen(false);
+      setPurchaseToDelete(null);
+    }
+  };
+
   const columns = [
     { header: 'Fornecedor / C. Custo', key: 'supplier_name', sortable: true, Cell: ({ row }) => (<div><strong>{row.supplier_name}</strong><div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{row.cost_center_name || 'Não informado'}</div></div>) },
     { header: 'Data', key: 'purchase_date', sortable: true, Cell: ({ row }) => new Date(row.purchase_date).toLocaleDateString() },
     { header: 'Status Pagamento', key: 'balance', sortable: true, Cell: ({ row }) => <ProgressBar total={row.total_amount} paid={row.total_paid} /> },
-    { header: 'Ações', key: 'actions', sortable: false, Cell: ({ row }) => (<Button icon={FaMoneyBillWave} onClick={() => openPaymentModal(row)} isIconOnly>Ver Pagamentos</Button>) },
+    { header: 'Ações', key: 'actions', sortable: false, Cell: ({ row }) => (
+      <div className={styles.actionsCell}>
+        <Button icon={FaMoneyBillWave} onClick={() => openPaymentModal(row)} isIconOnly>Ver Pagamentos</Button>
+        <Button icon={FaTrash} variant="danger" onClick={() => handleDeleteClick(row.id)} isIconOnly>Apagar Compra</Button>
+      </div>
+    )},
   ];
 
   return (
@@ -144,6 +169,16 @@ const Compras = () => {
           <PurchasePaymentForm purchase={selectedPurchase} onSuccess={handleSuccess} />
         </Modal>
       )}
+
+      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Confirmar Exclusão">
+        <div>
+          <p>Tem a certeza que quer apagar esta compra? Todos os pagamentos associados serão removidos e o stock será revertido. Esta ação não pode ser desfeita.</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+            <Button variant="ghost" onClick={() => setIsConfirmModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDelete}>Apagar Compra</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

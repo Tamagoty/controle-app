@@ -4,7 +4,7 @@
 
 [✅] 3 - Utilizadores, possibilidade de adicionar funcionário.
 
-4 - Implementar endereços viaCep (baixa prioridade)
+[✅] 4 - Implementar endereços viaCep (baixa prioridade)
 
 [✅] 5 - Relatórios sendo gerando fora do fuso horário, operações do dia não aparecem. (já resolvemos)
 
@@ -12,7 +12,6 @@
 
 [✅] 7 - o aporte do socio não está aparecendo no relátorio financeiro
 
-8 - modal para adicionar um novo produto dentro da pagina de produtos não está visualmente compátivel com a identidade visual do restante do aplicativo.
+[✅] 8 - modal para adicionar um novo produto dentro da pagina de produtos não está visualmente compátivel com a identidade visual do restante do aplicativo.
 
-9 - Selecionar um centro de custo padrão para trabalho, as vezes fazemos várias inclusões de uma só vez e é desnecessário sempre ta selecionando o mesmo centro de custo assim como o vendedor e a comissão, só criar um estimulo visual para informar que essas informações foram persistidas na reabertura do modal.
-
+9 - Selecionar um centro de custo padrão para trabalho, (falta nas despesas)

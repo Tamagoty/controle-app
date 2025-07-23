@@ -13,16 +13,14 @@ import StockAdjustmentForm from "../components/StockAdjustmentForm/StockAdjustme
 import ToggleSwitch from "../components/ToggleSwitch/ToggleSwitch";
 import Pagination from "../components/Pagination/Pagination";
 import { useNotify } from "../hooks/useNotify";
-import { useProdutos } from "../hooks/useProdutos"; // <-- NOSSO NOVO HOOK!
+import { useProdutos } from "../hooks/useProdutos";
 import styles from "./Produtos.module.css";
 
 const ITEMS_PER_PAGE = 10;
 
 const Produtos = () => {
-  // --- LÓGICA DE DADOS DO HOOK ---
   const { products, categories, loading, fetchProducts } = useProdutos();
-  
-  // --- ESTADOS LOCAIS DO COMPONENTE (UI) ---
+  const { profile } = useAuth(); // Usamos 'profile' em vez de 'role' diretamente
   const [sortConfig, setSortConfig] = useState({ key: "name", direction: "ascending" });
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
@@ -32,9 +30,9 @@ const Produtos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const notify = useNotify();
-  const { role } = useAuth();
 
-  const canManage = role === "admin" || role === "gestor";
+  // A lógica de permissão agora usa o 'profile' do AuthContext
+  const canManage = profile.role === "admin" || profile.role === "gestor";
 
   const filteredProducts = useMemo(() => {
     return products
@@ -119,6 +117,7 @@ const Produtos = () => {
     <div>
       <div className={styles.header}>
         <h1>Produtos</h1>
+        {/* Este é o botão que depende da permissão 'canManage' */}
         {canManage && ( <Button icon={FaPlus} onClick={() => openFormModal()}> Novo Produto </Button> )}
       </div>
 

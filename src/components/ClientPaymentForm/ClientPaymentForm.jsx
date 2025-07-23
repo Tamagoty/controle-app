@@ -43,8 +43,7 @@ const ClientPaymentForm = ({ client, onSuccess }) => {
 
       if (error) throw error;
       
-      // A RPC agora retorna o ID do primeiro pagamento criado
-      const newPaymentId = paymentData[0]?.payment_id;
+      const newPaymentId = paymentData?.[0]?.payment_id;
 
       if (attachmentFile && newPaymentId) {
         let fileToUpload = attachmentFile;

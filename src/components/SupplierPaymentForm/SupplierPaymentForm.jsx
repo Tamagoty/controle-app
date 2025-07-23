@@ -43,7 +43,7 @@ const SupplierPaymentForm = ({ supplier, onSuccess }) => {
 
       if (error) throw error;
       
-      const newPaymentId = paymentData[0]?.payment_id;
+      const newPaymentId = paymentData?.[0]?.payment_id;
 
       if (attachmentFile && newPaymentId) {
         let fileToUpload = attachmentFile;

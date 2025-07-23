@@ -2,28 +2,31 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { useAuth } from '../../context/AuthContext';
 import { useNotify } from '../../hooks/useNotify';
 import Button from '../Button/Button';
 import Modal from '../Modal/Modal';
-import FileUploader from '../FileUploader/FileUploader';
 import styles from './SalePaymentForm.module.css';
 import { FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 import CurrencyInput from '../CurrencyInput/CurrencyInput';
+import imageCompression from 'browser-image-compression';
+import FileUploader from '../FileUploader/FileUploader'; // <-- A CORREÇÃO ESTÁ AQUI
 
 const SalePaymentForm = ({ sale, onSuccess }) => {
   const [amount, setAmount] = useState(sale.balance > 0 ? sale.balance : 0);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attachmentFile, setAttachmentFile] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(true);
-  
   const [editingPayment, setEditingPayment] = useState(null);
-  
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState(null);
-
+  const { user, profile } = useAuth();
   const notify = useNotify();
+
   const handleFocus = (event) => event.target.select();
+  const handleFileChange = (e) => setAttachmentFile(e.target.files[0]);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -51,12 +54,30 @@ const SalePaymentForm = ({ sale, onSuccess }) => {
     }
 
     try {
-      const { error } = await supabase.from('sale_payments').insert({
+      const { data: newPayment, error } = await supabase.from('sale_payments').insert({
         sale_id: sale.id,
         amount_paid: amount,
-        payment_date: paymentDate,
-      });
+        payment_date: new Date(`${paymentDate}T12:00:00`).toISOString(),
+      }).select().single();
+
       if (error) throw error;
+
+      if (attachmentFile && newPayment.id) {
+        let fileToUpload = attachmentFile;
+        if (attachmentFile.type.startsWith('image/')) {
+            const { image_quality, max_size_mb, max_width_or_height } = profile.media_settings;
+            const options = { maxSizeMB: max_size_mb, maxWidthOrHeight: max_width_or_height, useWebWorker: true, initialQuality: image_quality };
+            fileToUpload = await imageCompression(attachmentFile, options);
+        }
+        const filePath = `${user.id}/${newPayment.id}/${Date.now()}_${fileToUpload.name}`;
+        await supabase.storage.from('attachments').upload(filePath, fileToUpload);
+        await supabase.from('attachments').insert({
+            file_path: filePath,
+            sale_payment_id: newPayment.id,
+            uploaded_by: user.id,
+        });
+      }
+
       notify.success('Pagamento registado com sucesso!');
       if (onSuccess) onSuccess();
     } catch (error) {
@@ -132,6 +153,10 @@ const SalePaymentForm = ({ sale, onSuccess }) => {
                 <label htmlFor="paymentDate">Data do Pagamento</label>
                 <input id="paymentDate" type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} required className={styles.input}/>
             </div>
+        </div>
+        <div className={styles.formGroup}>
+          <label htmlFor="attachment">Anexar Comprovativo (Opcional)</label>
+          <input id="attachment" type="file" accept="image/*,.pdf" onChange={handleFileChange} className={styles.fileInput} />
         </div>
         <div className={styles.formActions}>
           <Button type="submit" disabled={loading || sale.balance <= 0}>

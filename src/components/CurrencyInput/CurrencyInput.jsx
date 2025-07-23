@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './CurrencyInput.module.css';
 
-const CurrencyInput = ({ value, onChange, placeholder = "R$ 0,00", ...props }) => {
+const CurrencyInput = ({ value, onChange, placeholder = "R$ 0,00" }) => {
   const [displayValue, setDisplayValue] = useState('');
 
   useEffect(() => {
@@ -56,7 +56,6 @@ const CurrencyInput = ({ value, onChange, placeholder = "R$ 0,00", ...props }) =
       onChange={handleChange}
       onBlur={handleBlur}
       placeholder={placeholder}
-      {...props} // Passa quaisquer outras props, como onFocus
     />
   );
 };

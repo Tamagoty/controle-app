@@ -7,11 +7,11 @@ const AuthContext = createContext();
 
 const defaultProfile = {
   role: null,
+  name: null, // Novo campo para o nome
   avatar_url: null,
   media_settings: { image_quality: 0.6, max_size_mb: 1, max_width_or_height: 1920 }
 };
 
-// O componente agora não é exportado diretamente aqui
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(defaultProfile);
@@ -23,21 +23,18 @@ const AuthProvider = ({ children }) => {
 
     if (currentUser) {
       try {
-        const [roleResponse, profileResponse] = await Promise.all([
-          supabase.from('user_roles').select('role').eq('user_id', currentUser.id).single(),
-          supabase.from('user_profiles').select('avatar_url, media_settings').eq('user_id', currentUser.id).single()
-        ]);
+        // Chama a nova função otimizada para buscar todos os dados do perfil
+        const { data, error } = await supabase.rpc('get_full_user_profile', {
+          p_user_id: currentUser.id
+        });
 
-        const { data: roleData, error: roleError } = roleResponse;
-        const { data: profileData, error: profileError } = profileResponse;
-
-        if (roleError && roleError.code !== 'PGRST116') throw roleError;
-        if (profileError && profileError.code !== 'PGRST116') throw profileError;
+        if (error) throw error;
 
         setProfile({
-          role: roleData?.role || null,
-          avatar_url: profileData?.avatar_url || null,
-          media_settings: { ...defaultProfile.media_settings, ...profileData?.media_settings }
+          role: data.role || null,
+          name: data.name || null,
+          avatar_url: data.avatar_url || null,
+          media_settings: { ...defaultProfile.media_settings, ...data.media_settings }
         });
 
       } catch (error) {
@@ -88,10 +85,8 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   return useContext(AuthContext);
 };
 
-// Adicionamos o AuthProvider como a exportação default do ficheiro
 export default AuthProvider;

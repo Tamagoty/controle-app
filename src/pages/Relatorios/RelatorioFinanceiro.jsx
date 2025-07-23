@@ -1,10 +1,10 @@
 // src/pages/Relatorios/RelatorioFinanceiro.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../../components/Card/Card';
 import Table from '../../components/Table/Table';
 import StatCard from '../../components/StatCard/StatCard';
-import { useRelatorioFinanceiro } from '../../hooks/useRelatorioFinanceiro'; // <-- NOSSO NOVO HOOK!
+import { useRelatorioFinanceiro } from '../../hooks/useRelatorioFinanceiro';
 import styles from './RelatorioFinanceiro.module.css';
 
 const RelatorioFinanceiro = () => {
@@ -13,10 +13,8 @@ const RelatorioFinanceiro = () => {
     end: new Date().toISOString().split('T')[0],
   });
 
-  // --- LÓGICA DE DADOS DO HOOK ---
   const { reportData, loading, fetchReport } = useRelatorioFinanceiro(dates);
 
-  // Efeito para buscar novos dados quando as datas mudam
   useEffect(() => {
     fetchReport(dates);
   }, [dates, fetchReport]);
@@ -37,7 +35,10 @@ const RelatorioFinanceiro = () => {
     { header: 'Valor', key: 'amount', Cell: ({ row }) => formatCurrency(row.amount)},
   ];
   
-  const sortedTransactions = [...(reportData.transactions || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortedTransactions = useMemo(() => 
+    [...(reportData.transactions || [])].sort((a, b) => new Date(b.date) - new Date(a.date)),
+    [reportData.transactions]
+  );
 
   return (
     <div>
@@ -58,11 +59,13 @@ const RelatorioFinanceiro = () => {
       {loading ? <p>A gerar relatório...</p> : (
         <>
             <div className={styles.summaryGrid}>
-                <StatCard title="Total de Entradas" value={formatCurrency(reportData.summary.total_inflow)} />
-                <StatCard title="Total de Saídas" value={formatCurrency(reportData.summary.total_outflow)} />
+                {/* ATUALIZAÇÃO: Adicionada a propriedade 'type' para a borda colorida */}
+                <StatCard title="Total de Entradas" value={formatCurrency(reportData.summary.total_inflow)} type="revenue" />
+                <StatCard title="Total de Saídas" value={formatCurrency(reportData.summary.total_outflow)} type="expense" />
                 <StatCard 
                     title="Lucro Líquido" 
                     value={formatCurrency(reportData.summary.net_profit)} 
+                    type="balance"
                 />
             </div>
 

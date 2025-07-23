@@ -8,6 +8,9 @@ import { FaUserCircle } from 'react-icons/fa';
 const Header = ({ onToggleSidebar }) => {
     const { user, profile } = useAuth();
 
+    // Exibe o nome do perfil se existir, caso contrário, volta a exibir o email
+    const displayName = profile.name || user?.email;
+
     return (
         <header className={styles.header}>
             <button className={styles.hamburgerButton} onClick={onToggleSidebar}>
@@ -16,7 +19,7 @@ const Header = ({ onToggleSidebar }) => {
                 </svg>
             </button>
             <div className={styles.userInfo}>
-                <span>{user?.email}</span>
+                <span className={styles.userName}>{displayName}</span>
                 {profile.avatar_url ? (
                     <img src={profile.avatar_url} alt="Avatar do utilizador" className={styles.avatar} />
                 ) : (

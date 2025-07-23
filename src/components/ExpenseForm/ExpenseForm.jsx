@@ -31,6 +31,7 @@ const ExpenseForm = ({ onSuccess }) => {
   // Novos estados para o pagamento imediato
   const [addPayment, setAddPayment] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [attachmentFile, setAttachmentFile] = useState(null);
 
   useEffect(() => {
@@ -75,14 +76,18 @@ const ExpenseForm = ({ onSuccess }) => {
     setLoading(true);
     
     try {
+      const expenseTimestamp = new Date(`${formData.expense_date}T12:00:00`).toISOString();
+      const paymentTimestamp = addPayment ? new Date(`${paymentDate}T12:00:00`).toISOString() : new Date().toISOString();
+
       const { data: expenseData, error } = await supabase.rpc('create_expense_with_details', {
         description_param: formData.description,
         amount_param: formData.amount,
         category_id_param: formData.category_id,
         cost_center_id_param: formData.cost_center_id,
-        expense_date_param: formData.expense_date,
+        expense_date_param: expenseTimestamp,
         employee_id_param: formData.employee_id || null,
-        payment_amount_param: addPayment ? paymentAmount : 0
+        payment_amount_param: addPayment ? paymentAmount : 0,
+        payment_date_param: paymentTimestamp
       });
 
       if (error) throw error;
@@ -167,6 +172,10 @@ const ExpenseForm = ({ onSuccess }) => {
                 <div className={paymentStyles.formGroup}>
                     <label htmlFor="paymentAmount">Valor Pago</label>
                     <CurrencyInput value={paymentAmount} onChange={setPaymentAmount} />
+                </div>
+                <div className={paymentStyles.formGroup}>
+                    <label htmlFor="paymentDate">Data do Pagamento</label>
+                    <input id="paymentDate" type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} required className={paymentStyles.input} />
                 </div>
                 <div className={paymentStyles.formGroup}>
                     <label htmlFor="attachment">Anexar Comprovativo</label>

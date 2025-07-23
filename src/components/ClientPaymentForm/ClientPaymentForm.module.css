@@ -21,6 +21,13 @@
   font-size: 1.1rem;
 }
 
+.formGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
 .formGroup {
   display: flex;
   flex-direction: column;
@@ -40,10 +47,32 @@
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
   color: var(--color-text-primary);
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
 }
 
 .formActions {
   display: flex;
   justify-content: flex-end;
+  margin-top: var(--spacing-md);
+}
+
+/* --- NOVOS ESTILOS PARA O INPUT DE FICHEIRO --- */
+.fileInput {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.fileInput::file-selector-button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-right: var(--spacing-md);
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+}
+
+.fileInput::file-selector-button:hover {
+    background-color: var(--color-border);
 }

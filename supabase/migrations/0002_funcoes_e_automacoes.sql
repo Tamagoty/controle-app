@@ -1,7 +1,8 @@
 -- // supabase/migrations/0002_functions.sql
 -- =================================================================
--- SCRIPT 2: FUNÇÕES (RPC)
+-- SCRIPT 2: FUNÇÕES (RPC) - VERSÃO CORRIGIDA
 -- Cria todas as funções RPC utilizadas pela aplicação.
+-- Inclui comandos DROP para funções cujo tipo de retorno foi alterado.
 -- =================================================================
 
 -- --- Funções de Lógica de Negócio (CRUD com detalhes) ---
@@ -47,6 +48,7 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS public.create_sale_with_details(UUID, UUID, INT, NUMERIC, JSONB, TIMESTAMPTZ, NUMERIC, TIMESTAMPTZ);
 CREATE OR REPLACE FUNCTION public.create_sale_with_details(
     client_id_param UUID, seller_id_param UUID, cost_center_id_param INT,
     commission_percentage_param NUMERIC, items_param JSONB, sale_date_param TIMESTAMPTZ,
@@ -75,6 +77,7 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS public.create_purchase_with_details(UUID, INT, JSONB, TIMESTAMPTZ, NUMERIC, TIMESTAMPTZ);
 CREATE OR REPLACE FUNCTION public.create_purchase_with_details(
     supplier_id_param UUID, cost_center_id_param INT, items_param JSONB,
     purchase_date_param TIMESTAMPTZ, payment_amount_param NUMERIC DEFAULT 0,
@@ -102,6 +105,7 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS public.create_expense_with_details(TEXT, NUMERIC, INT, INT, TIMESTAMPTZ, UUID, NUMERIC, TIMESTAMPTZ);
 CREATE OR REPLACE FUNCTION public.create_expense_with_details(
     description_param TEXT, amount_param NUMERIC, category_id_param INT, cost_center_id_param INT,
     expense_date_param TIMESTAMPTZ, employee_id_param UUID,
@@ -122,6 +126,7 @@ END;
 $$;
 
 -- Funções de Pagamento
+DROP FUNCTION IF EXISTS public.pay_seller_commission(UUID, NUMERIC, TIMESTAMPTZ);
 CREATE OR REPLACE FUNCTION public.pay_seller_commission(
     a_seller_id UUID, b_payment_amount NUMERIC, c_payment_date TIMESTAMPTZ
 )
@@ -144,6 +149,7 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS public.pay_client_debt(uuid, numeric, timestamp with time zone);
 CREATE OR REPLACE FUNCTION public.pay_client_debt(
     p_client_id UUID, p_payment_amount NUMERIC, p_payment_date TIMESTAMPTZ DEFAULT NOW()
 ) RETURNS TABLE(payment_id UUID) LANGUAGE plpgsql AS $$
@@ -163,6 +169,7 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS public.pay_supplier_debt(uuid, numeric, timestamp with time zone);
 CREATE OR REPLACE FUNCTION public.pay_supplier_debt(
     p_supplier_id UUID, p_payment_amount NUMERIC, p_payment_date TIMESTAMPTZ DEFAULT NOW()
 ) RETURNS TABLE(payment_id UUID) LANGUAGE plpgsql AS $$
@@ -282,6 +289,7 @@ CREATE OR REPLACE FUNCTION public.get_partners_with_details()
 RETURNS TABLE(id UUID, entity_id UUID, name TEXT, equity_percentage NUMERIC, is_active BOOLEAN, entry_date DATE, exit_date DATE)
 LANGUAGE sql STABLE AS $$ SELECT p.id, e.id AS entity_id, e.name, p.equity_percentage, p.is_active, p.entry_date, p.exit_date FROM public.entities e INNER JOIN public.entity_roles er ON e.id = er.entity_id AND er.role = 'Sócio' LEFT JOIN public.partners p ON e.id = p.entity_id ORDER BY e.name ASC; $$;
 
+DROP FUNCTION IF EXISTS public.get_products_with_details();
 CREATE OR REPLACE FUNCTION public.get_products_with_details()
 RETURNS TABLE(id UUID, name TEXT, description TEXT, sale_price NUMERIC, purchase_price NUMERIC, product_type TEXT, unit_of_measure TEXT, is_active BOOLEAN, category_id INT, category_name TEXT, stock_quantity NUMERIC)
 LANGUAGE sql STABLE AS $$ SELECT p.id, p.name, p.description, p.sale_price, p.purchase_price, p.product_type, p.unit_of_measure, p.is_active, p.category_id, pc.name as category_name, COALESCE(ps.quantity, 0) as stock_quantity FROM public.products p LEFT JOIN public.product_categories pc ON p.category_id = pc.id LEFT JOIN public.product_stock ps ON p.id = ps.product_id ORDER BY p.name ASC; $$;

@@ -42,8 +42,6 @@ const RelatorioDetalhado = () => {
   const [openSubSections, setOpenSubSections] = useState({});
   const notify = useNotify();
 
-  // CORREÇÃO: A função para buscar os dados agora depende apenas das 'datas'.
-  // O 'notify' foi removido das dependências para quebrar o loop infinito.
   const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
@@ -72,7 +70,7 @@ const RelatorioDetalhado = () => {
     } finally {
       setLoading(false);
     }
-  }, [dates]); // A dependência do 'notify' foi removida.
+  }, [dates, notify]); // CORREÇÃO: Adicionado 'notify' às dependências.
 
   useEffect(() => {
     fetchTransactions();

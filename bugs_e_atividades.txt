@@ -14,4 +14,4 @@
 
 [✅] 8 - modal para adicionar um novo produto dentro da pagina de produtos não está visualmente compátivel com a identidade visual do restante do aplicativo.
 
-9 - Selecionar um centro de custo padrão para trabalho, (falta nas despesas)
+9 - Selecionar um centro de custo padrão para trabalho, (falta nas despesas) e observar mais

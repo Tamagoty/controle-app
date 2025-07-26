@@ -1,0 +1,39 @@
+/* src/components/TableSkeleton/TableSkeleton.module.css */
+
+.skeletonContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  width: 100%;
+}
+
+.skeletonRow {
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: center;
+  width: 100%;
+}
+
+.skeletonCell {
+  height: 20px;
+  background-color: var(--color-bg-tertiary);
+  border-radius: var(--border-radius-sm);
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Define a proporção das colunas para imitar a tabela real de Vendas */
+.skeletonRow .skeletonCell:nth-child(1) { flex: 3; } /* Cliente / Vendedor */
+.skeletonRow .skeletonCell:nth-child(2) { flex: 2; } /* Data / C. Custo */
+.skeletonRow .skeletonCell:nth-child(3) { flex: 3; } /* Status Pagamento */
+.skeletonRow .skeletonCell:nth-child(4) { flex: 1; min-width: 80px; } /* Ações */
+
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

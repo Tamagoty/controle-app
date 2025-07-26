@@ -1,4 +1,4 @@
--- // supabase/migrations/0002_functions.sql
+-- // supabase/migrations/0002_funcoes_e_automacoes.sql
 -- =================================================================
 -- SCRIPT 2: FUNÇÕES (RPC) - VERSÃO CORRIGIDA
 -- Cria todas as funções RPC utilizadas pela aplicação.
@@ -128,13 +128,13 @@ $$;
 -- Funções de Pagamento
 DROP FUNCTION IF EXISTS public.pay_seller_commission(UUID, NUMERIC, TIMESTAMPTZ);
 CREATE OR REPLACE FUNCTION public.pay_seller_commission(
-    a_seller_id UUID, b_payment_amount NUMERIC, c_payment_date TIMESTAMPTZ
+    p_seller_id UUID, p_payment_amount NUMERIC, p_payment_date TIMESTAMPTZ
 )
 RETURNS VOID LANGUAGE plpgsql AS $$
 DECLARE
-    sale_record RECORD; commission_due NUMERIC; commission_paid NUMERIC; commission_balance NUMERIC; payment_to_apply NUMERIC; remaining_payment_amount NUMERIC := b_payment_amount;
+    sale_record RECORD; commission_due NUMERIC; commission_paid NUMERIC; commission_balance NUMERIC; payment_to_apply NUMERIC; remaining_payment_amount NUMERIC := p_payment_amount;
 BEGIN
-    FOR sale_record IN SELECT s.id as sale_id, s.total_amount, s.commission_percentage FROM public.sales s WHERE s.seller_id = a_seller_id AND s.commission_percentage > 0 ORDER BY s.sale_date ASC LOOP
+    FOR sale_record IN SELECT s.id as sale_id, s.total_amount, s.commission_percentage FROM public.sales s WHERE s.seller_id = p_seller_id AND s.commission_percentage > 0 ORDER BY s.sale_date ASC LOOP
         IF remaining_payment_amount <= 0 THEN EXIT; END IF;
         commission_due := sale_record.total_amount * (sale_record.commission_percentage / 100);
         SELECT COALESCE(SUM(amount_paid), 0) INTO commission_paid FROM public.commission_payments WHERE sale_id = sale_record.sale_id;
@@ -142,7 +142,7 @@ BEGIN
         IF commission_balance > 0 THEN
             payment_to_apply := LEAST(remaining_payment_amount, commission_balance);
             INSERT INTO public.commission_payments (seller_id, sale_id, amount_paid, payment_date) 
-            VALUES (a_seller_id, sale_record.sale_id, payment_to_apply, c_payment_date);
+            VALUES (p_seller_id, sale_record.sale_id, payment_to_apply, p_payment_date);
             remaining_payment_amount := remaining_payment_amount - payment_to_apply;
         END IF;
     END LOOP;
@@ -221,6 +221,13 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.delete_partner_transaction(p_transaction_id UUID)
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+    DELETE FROM public.partner_transactions WHERE id = p_transaction_id;
+END;
+$$;
+
 -- Funções de Leitura (GET) para as páginas
 CREATE OR REPLACE FUNCTION public.get_my_role()
 RETURNS TEXT LANGUAGE sql STABLE SECURITY INVOKER AS $$
@@ -261,9 +268,45 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.get_sales_with_payment_status()
+-- ALTERAÇÃO: Adiciona parâmetros de filtro à função
+CREATE OR REPLACE FUNCTION public.get_sales_with_payment_status(
+    p_client_name_filter TEXT DEFAULT NULL,
+    p_cost_center_name_filter TEXT DEFAULT NULL,
+    p_payment_status_filter TEXT DEFAULT NULL
+)
 RETURNS TABLE(id UUID, sale_date TIMESTAMPTZ, client_name TEXT, seller_name TEXT, cost_center_name TEXT, total_amount NUMERIC, commission_percentage NUMERIC, total_paid NUMERIC, balance NUMERIC)
-LANGUAGE sql STABLE AS $$ SELECT s.id, s.sale_date, client_entity.name as client_name, seller_entity.name as seller_name, cc.name as cost_center_name, s.total_amount, s.commission_percentage, COALESCE((SELECT SUM(sp.amount_paid) FROM public.sale_payments sp WHERE sp.sale_id = s.id), 0) as total_paid, s.total_amount - COALESCE((SELECT SUM(sp.amount_paid) FROM public.sale_payments sp WHERE sp.sale_id = s.id), 0) as balance FROM public.sales s LEFT JOIN public.entities client_entity ON s.client_id = client_entity.id LEFT JOIN public.entities seller_entity ON s.seller_id = seller_entity.id LEFT JOIN public.cost_centers cc ON s.cost_center_id = cc.id ORDER BY s.sale_date DESC; $$;
+LANGUAGE sql STABLE AS $$
+WITH sales_with_balance AS (
+    SELECT
+        s.id,
+        s.sale_date,
+        client_entity.name as client_name,
+        seller_entity.name as seller_name,
+        cc.name as cost_center_name,
+        s.total_amount,
+        s.commission_percentage,
+        COALESCE((SELECT SUM(sp.amount_paid) FROM public.sale_payments sp WHERE sp.sale_id = s.id), 0) as total_paid,
+        s.total_amount - COALESCE((SELECT SUM(sp.amount_paid) FROM public.sale_payments sp WHERE sp.sale_id = s.id), 0) as balance
+    FROM
+        public.sales s
+        LEFT JOIN public.entities client_entity ON s.client_id = client_entity.id
+        LEFT JOIN public.entities seller_entity ON s.seller_id = seller_entity.id
+        LEFT JOIN public.cost_centers cc ON s.cost_center_id = cc.id
+)
+SELECT *
+FROM sales_with_balance
+WHERE
+    (p_client_name_filter IS NULL OR client_name ILIKE '%' || p_client_name_filter || '%')
+AND
+    (p_cost_center_name_filter IS NULL OR cost_center_name ILIKE '%' || p_cost_center_name_filter || '%')
+AND
+    (p_payment_status_filter IS NULL OR
+        (p_payment_status_filter = 'pago' AND balance <= 0) OR
+        (p_payment_status_filter = 'parcial' AND balance > 0 AND total_paid > 0) OR
+        (p_payment_status_filter = 'nao_pago' AND total_paid = 0)
+    )
+ORDER BY sale_date DESC;
+$$;
 
 CREATE OR REPLACE FUNCTION public.get_purchases_with_payment_status()
 RETURNS TABLE(id UUID, purchase_date TIMESTAMPTZ, supplier_name TEXT, cost_center_name TEXT, total_amount NUMERIC, total_paid NUMERIC, balance NUMERIC)

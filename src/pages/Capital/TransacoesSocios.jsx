@@ -36,7 +36,7 @@ const TransacoesSocios = () => {
     } finally {
       setLoading(false);
     }
-  }, [notify]); // Removido [notify] temporariamente para evitar o loop
+  }, [notify]);
 
   useEffect(() => {
     fetchTransactions();
@@ -56,7 +56,11 @@ const TransacoesSocios = () => {
   const confirmDelete = async () => {
     if (!transactionToDelete) return;
     try {
-        await supabase.from('partner_transactions').delete().eq('id', transactionToDelete);
+        // CORREÇÃO: Chamando a nova função RPC
+        const { error } = await supabase.rpc('delete_partner_transaction', { 
+          p_transaction_id: transactionToDelete 
+        });
+        if (error) throw error;
         notify.success('Transação apagada.');
         fetchTransactions();
     } catch (error) {
@@ -74,7 +78,6 @@ const TransacoesSocios = () => {
 
   const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
-  // CORREÇÃO: A definição de 'columns' foi movida para dentro do componente.
   const columns = [
     { header: 'Data', key: 'transaction_date', Cell: ({ row }) => new Date(row.transaction_date).toLocaleDateString() },
     { header: 'Sócio', key: 'partner_name', accessor: 'partner_name' },

@@ -41,7 +41,6 @@ const ProductCategories = () => {
       setCategories(current => current.map(cat => cat.id === id ? { ...cat, is_active: newStatus } : cat));
       notify.success('Status atualizado!');
     } catch (error) {
-      // CORREÇÃO: Agora usamos a mensagem de erro real para uma notificação mais informativa.
       notify.error(error.message || 'Falha ao atualizar o status.');
     }
   };

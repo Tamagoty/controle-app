@@ -6,24 +6,21 @@ import { useNotify } from './useNotify';
 
 /**
  * Hook personalizado para gerir a lógica de busca de dados de produtos.
- * @returns {{products: Array, categories: Array, loading: boolean, error: string|null, fetchProducts: () => Promise<void>}}
+ * @returns {{products: Array, categories: Array, loading: boolean, fetchProducts: () => Promise<void>}}
  */
 export const useProdutos = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const notify = useNotify();
 
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
       const { data, error: rpcError } = await supabase.rpc("get_products_with_details");
       if (rpcError) throw rpcError;
       setProducts(data || []);
     } catch (err) {
-      setError(err.message);
       notify.error(err.message || "Não foi possível carregar os produtos.");
     } finally {
       setLoading(false);
@@ -45,5 +42,5 @@ export const useProdutos = () => {
     fetchCategories();
   }, [fetchProducts, fetchCategories]);
 
-  return { products, categories, loading, error, fetchProducts };
+  return { products, categories, loading, fetchProducts };
 };

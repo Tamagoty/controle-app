@@ -53,9 +53,9 @@ const CommissionPaymentForm = ({ seller, onSuccess }) => {
     try {
       // CORREÇÃO: Usa os novos nomes de parâmetros para forçar a ordem correta
       const { error } = await supabase.rpc('pay_seller_commission', {
-        a_seller_id: seller.seller_id,
-        b_payment_amount: amount,
-        c_payment_date: new Date(`${paymentDate}T12:00:00`).toISOString()
+        p_seller_id: seller.seller_id,
+        p_payment_amount: amount,
+        p_payment_date: new Date(`${paymentDate}T12:00:00`).toISOString()
       });
 
       if (error) throw error;

@@ -37,7 +37,7 @@ const Socios = () => {
     } finally {
       setLoading(false);
     }
-  }, []); //CORREÇÃO: Removemos 'notify' das dependências para quebrar o loop.
+  }, [notify]); //CORREÇÃO: Adicionado 'notify' às dependências.
 
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const Socios = () => {
       setPartners(current => current.map(p => p.entity_id === entityId ? { ...p, is_active: newStatus } : p));
       notify.success('Status do sócio atualizado!');
     } catch (error) {
-      notify.error('Falha ao atualizar o status.');
+      notify.error(error.message || 'Falha ao atualizar o status.');
     }
   };
   
